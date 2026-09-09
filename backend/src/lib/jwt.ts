@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 
 export interface JwtPayload {
   userId: string;
-  role: "OWNER" | "MANAGER" | "ADMIN";
+  role: "OWNER" | "MANAGER" | "ADMIN" | "TENANT";
 }
 
 const SECRET = process.env.JWT_SECRET as string;

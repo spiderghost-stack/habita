@@ -5,7 +5,7 @@ declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
-      user?: { userId: string; role: "OWNER" | "MANAGER" | "ADMIN" };
+      user?: { userId: string; role: "OWNER" | "MANAGER" | "ADMIN" | "TENANT" };
     }
   }
 }
@@ -25,7 +25,7 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
   }
 }
 
-export function requireRole(...roles: Array<"OWNER" | "MANAGER" | "ADMIN">) {
+export function requireRole(...roles: Array<"OWNER" | "MANAGER" | "ADMIN" | "TENANT">) {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user || !roles.includes(req.user.role)) {
       return res.status(403).json({ message: "Accès refusé pour ce rôle." });
