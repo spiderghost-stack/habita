@@ -1,12 +1,12 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { Suspense, FormEvent, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { api, ApiError } from "@/lib/api";
 import { Property, Unit } from "@/lib/types";
 
-export default function NewTenantPage() {
+function NewTenantForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [properties, setProperties] = useState<Property[]>([]);
@@ -36,8 +36,6 @@ export default function NewTenantPage() {
     });
   }, [propertyId]);
 
-  // Pré-remplir le loyer avec celui de l'unité choisie : évite une saisie
-  // en double d'une information déjà connue du système.
   useEffect(() => {
     const unit = units.find((u) => u.id === unitId);
     if (unit) setRentAmount(unit.rentAmount);
@@ -67,85 +65,92 @@ export default function NewTenantPage() {
   }
 
   return (
+    <form onSubmit={handleSubmit} className="max-w-xl border border-petrole-200 bg-white p-6">
+      {error && <p className="mb-4 border-l-2 border-or-400 bg-or-50 px-3 py-2 text-sm">{error}</p>}
+
+      <div className="mb-4">
+        <label className="mb-1 block text-xs uppercase tracking-wide text-petrole-500">Propriété</label>
+        <select
+          required
+          value={propertyId}
+          onChange={(e) => { setPropertyId(e.target.value); setUnitId(""); }}
+          className="w-full border border-petrole-200 px-3 py-2 text-sm outline-none focus:border-petrole-500"
+        >
+          <option value="">Sélectionner…</option>
+          {properties.map((p) => (
+            <option key={p.id} value={p.id}>{p.name}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="mb-4">
+        <label className="mb-1 block text-xs uppercase tracking-wide text-petrole-500">
+          Unité (optionnel)
+        </label>
+        <select
+          value={unitId}
+          onChange={(e) => setUnitId(e.target.value)}
+          disabled={!propertyId}
+          className="w-full border border-petrole-200 px-3 py-2 text-sm outline-none focus:border-petrole-500 disabled:bg-fond"
+        >
+          <option value="">Aucune unité assignée</option>
+          {units.map((u) => (
+            <option key={u.id} value={u.id}>{u.identifier}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="mb-4 grid grid-cols-2 gap-4">
+        <div>
+          <label className="mb-1 block text-xs uppercase tracking-wide text-petrole-500">Prénom</label>
+          <input required value={firstName} onChange={(e) => setFirstName(e.target.value)} className="w-full border border-petrole-200 px-3 py-2 text-sm outline-none focus:border-petrole-500" />
+        </div>
+        <div>
+          <label className="mb-1 block text-xs uppercase tracking-wide text-petrole-500">Nom</label>
+          <input required value={lastName} onChange={(e) => setLastName(e.target.value)} className="w-full border border-petrole-200 px-3 py-2 text-sm outline-none focus:border-petrole-500" />
+        </div>
+      </div>
+
+      <div className="mb-4 grid grid-cols-2 gap-4">
+        <div>
+          <label className="mb-1 block text-xs uppercase tracking-wide text-petrole-500">Téléphone</label>
+          <input required value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full border border-petrole-200 px-3 py-2 text-sm outline-none focus:border-petrole-500" />
+        </div>
+        <div>
+          <label className="mb-1 block text-xs uppercase tracking-wide text-petrole-500">Email (optionnel)</label>
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full border border-petrole-200 px-3 py-2 text-sm outline-none focus:border-petrole-500" />
+        </div>
+      </div>
+
+      <div className="mb-6 grid grid-cols-2 gap-4">
+        <div>
+          <label className="mb-1 block text-xs uppercase tracking-wide text-petrole-500">Loyer mensuel (FCFA)</label>
+          <input required type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} className="w-full border border-petrole-200 px-3 py-2 text-sm outline-none focus:border-petrole-500" />
+        </div>
+        <div>
+          <label className="mb-1 block text-xs uppercase tracking-wide text-petrole-500">Jour d'échéance</label>
+          <input required type="number" min={1} max={28} value={dueDay} onChange={(e) => setDueDay(e.target.value)} className="w-full border border-petrole-200 px-3 py-2 text-sm outline-none focus:border-petrole-500" />
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        disabled={submitting}
+        className="bg-petrole-700 px-4 py-2 text-sm text-white hover:bg-petrole-800 disabled:opacity-60"
+      >
+        {submitting ? "Ajout…" : "Ajouter le locataire"}
+      </button>
+    </form>
+  );
+}
+
+export default function NewTenantPage() {
+  return (
     <AppShell>
       <h1 className="mb-6 font-display text-2xl text-petrole-800">Ajouter un locataire</h1>
-
-      <form onSubmit={handleSubmit} className="max-w-xl border border-petrole-200 bg-white p-6">
-        {error && <p className="mb-4 border-l-2 border-or-400 bg-or-50 px-3 py-2 text-sm">{error}</p>}
-
-        <div className="mb-4">
-          <label className="mb-1 block text-xs uppercase tracking-wide text-petrole-500">Propriété</label>
-          <select
-            required
-            value={propertyId}
-            onChange={(e) => { setPropertyId(e.target.value); setUnitId(""); }}
-            className="w-full border border-petrole-200 px-3 py-2 text-sm outline-none focus:border-petrole-500"
-          >
-            <option value="">Sélectionner…</option>
-            {properties.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="mb-4">
-          <label className="mb-1 block text-xs uppercase tracking-wide text-petrole-500">
-            Unité (optionnel)
-          </label>
-          <select
-            value={unitId}
-            onChange={(e) => setUnitId(e.target.value)}
-            disabled={!propertyId}
-            className="w-full border border-petrole-200 px-3 py-2 text-sm outline-none focus:border-petrole-500 disabled:bg-fond"
-          >
-            <option value="">Aucune unité assignée</option>
-            {units.map((u) => (
-              <option key={u.id} value={u.id}>{u.identifier}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="mb-4 grid grid-cols-2 gap-4">
-          <div>
-            <label className="mb-1 block text-xs uppercase tracking-wide text-petrole-500">Prénom</label>
-            <input required value={firstName} onChange={(e) => setFirstName(e.target.value)} className="w-full border border-petrole-200 px-3 py-2 text-sm outline-none focus:border-petrole-500" />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs uppercase tracking-wide text-petrole-500">Nom</label>
-            <input required value={lastName} onChange={(e) => setLastName(e.target.value)} className="w-full border border-petrole-200 px-3 py-2 text-sm outline-none focus:border-petrole-500" />
-          </div>
-        </div>
-
-        <div className="mb-4 grid grid-cols-2 gap-4">
-          <div>
-            <label className="mb-1 block text-xs uppercase tracking-wide text-petrole-500">Téléphone</label>
-            <input required value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full border border-petrole-200 px-3 py-2 text-sm outline-none focus:border-petrole-500" />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs uppercase tracking-wide text-petrole-500">Email (optionnel)</label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full border border-petrole-200 px-3 py-2 text-sm outline-none focus:border-petrole-500" />
-          </div>
-        </div>
-
-        <div className="mb-6 grid grid-cols-2 gap-4">
-          <div>
-            <label className="mb-1 block text-xs uppercase tracking-wide text-petrole-500">Loyer mensuel (FCFA)</label>
-            <input required type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} className="w-full border border-petrole-200 px-3 py-2 text-sm outline-none focus:border-petrole-500" />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs uppercase tracking-wide text-petrole-500">Jour d'échéance</label>
-            <input required type="number" min={1} max={28} value={dueDay} onChange={(e) => setDueDay(e.target.value)} className="w-full border border-petrole-200 px-3 py-2 text-sm outline-none focus:border-petrole-500" />
-          </div>
-        </div>
-
-        <button
-          type="submit"
-          disabled={submitting}
-          className="bg-petrole-700 px-4 py-2 text-sm text-white hover:bg-petrole-800 disabled:opacity-60"
-        >
-          {submitting ? "Ajout…" : "Ajouter le locataire"}
-        </button>
-      </form>
+      <Suspense fallback={<div>Chargement...</div>}>
+        <NewTenantForm />
+      </Suspense>
     </AppShell>
   );
 }
