@@ -22,10 +22,10 @@ export default function MessagesPage() {
 
   return (
     <AppShell>
-      <h1 className="mb-8 font-display text-2xl text-petrole-800">Messages</h1>
+      <h1 className="mb-6 font-display text-xl font-bold text-petrole-800 sm:text-2xl">Messages</h1>
 
-      <div className="flex gap-6" style={{ minHeight: "60vh" }}>
-        <div className="w-64 flex-shrink-0 border border-petrole-200 bg-white">
+      <div className="flex flex-col gap-4 sm:flex-row" style={{ minHeight: "60vh" }}>
+        <div className="w-full shrink-0 border border-petrole-200 bg-white sm:w-56 lg:w-64">
           {loading && <p className="px-4 py-6 text-sm text-petrole-500">Chargement…</p>}
           {!loading && conversations.length === 0 && (
             <p className="px-4 py-6 text-sm text-petrole-500">
@@ -52,7 +52,7 @@ export default function MessagesPage() {
           ))}
         </div>
 
-        <div className="flex-1 border border-petrole-200 bg-white">
+        <div className="min-h-64 flex-1 border border-petrole-200 bg-white">
           {selectedTenantId ? (
             <ConversationThread tenantId={selectedTenantId} onSent={refreshConversations} />
           ) : (
@@ -131,7 +131,7 @@ function ConversationThread({ tenantId, onSent }: { tenantId: string; onSent: ()
         <button
           type="submit"
           disabled={sending}
-          className="bg-petrole-700 px-4 py-2 text-sm text-white hover:bg-petrole-800 disabled:opacity-60"
+          className="bg-petrole-700 px-4 py-2 text-sm font-semibold text-white hover:bg-petrole-800 disabled:opacity-60"
         >
           {sending ? "…" : "Envoyer"}
         </button>

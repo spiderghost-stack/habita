@@ -29,7 +29,7 @@ export default function AdminPage() {
 
   return (
     <AppShell>
-      <h1 className="mb-2 font-display text-2xl text-petrole-800">Administration</h1>
+      <h1 className="mb-2 font-display text-xl font-bold text-petrole-800 sm:text-2xl">Administration</h1>
       <p className="mb-8 text-sm text-petrole-500">
         Changement de rôle et de plan manuel — il n'y a pas de prestataire de paiement branché dans ce MVP, voir MANUAL_STEPS.md.
       </p>

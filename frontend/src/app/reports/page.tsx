@@ -74,9 +74,9 @@ export default function ReportsPage() {
 
   return (
     <AppShell>
-      <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
-        <h1 className="font-display text-2xl text-petrole-800">Rapports</h1>
-        <div className="flex gap-3">
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+        <h1 className="font-display text-xl font-bold text-petrole-800 sm:text-2xl">Rapports</h1>
+        <div className="flex flex-wrap gap-3">
           <select
             value={propertyId}
             onChange={(e) => setPropertyId(e.target.value)}
@@ -101,29 +101,29 @@ export default function ReportsPage() {
 
       {report && !loading && (
         <>
-          <div className="mb-4 flex gap-3">
+          <div className="mb-4 flex flex-wrap gap-3">
             <button
               onClick={handleDownload}
               disabled={downloading}
-              className="bg-petrole-700 px-4 py-2 text-sm text-white hover:bg-petrole-800 disabled:opacity-60"
+              className="bg-petrole-700 px-4 py-2 text-sm font-semibold text-white hover:bg-petrole-800 disabled:opacity-60"
             >
               {downloading ? "…" : "Télécharger en CSV"}
             </button>
             <button
               onClick={handleSend}
               disabled={sending}
-              className="border border-petrole-300 px-4 py-2 text-sm text-petrole-700 hover:bg-petrole-50 disabled:opacity-60"
+              className="border border-petrole-300 px-4 py-2 text-sm font-semibold text-petrole-700 hover:bg-petrole-50 disabled:opacity-60"
             >
               {sending ? "Envoi…" : "M'envoyer ce rapport par email"}
             </button>
           </div>
           {sentTo && <p className="mb-4 text-sm text-petrole-600">Rapport envoyé à {sentTo}.</p>}
 
-          <div className="mb-6 grid grid-cols-2 gap-px overflow-hidden border border-petrole-200 bg-petrole-200 md:grid-cols-4">
+          <div className="mb-6 grid grid-cols-2 gap-px overflow-hidden border border-petrole-200 bg-petrole-200 sm:grid-cols-2 md:grid-cols-4">
             <Stat label={`Collecté — ${monthLabel(period)}`} value={formatFcfa(report.totals.rentCollected)} />
             <Stat label="Dépenses" value={formatFcfa(report.totals.totalExpenses)} />
             <Stat label="Net" value={formatFcfa(report.totals.netIncome)} accent={report.totals.netIncome < 0 ? "or" : "petrole"} />
-            <Stat label="Occupation moyenne" value={`${report.totals.occupancyRate}%`} />
+            <Stat label="Occupation moy." value={`${report.totals.occupancyRate}%`} />
           </div>
 
           <div className="overflow-x-auto border border-petrole-200 bg-white">
@@ -171,9 +171,9 @@ export default function ReportsPage() {
 
 function Stat({ label, value, accent }: { label: string; value: string; accent?: "petrole" | "or" }) {
   return (
-    <div className="bg-white px-4 py-4">
-      <p className="mb-1 text-xs uppercase tracking-wide text-petrole-500">{label}</p>
-      <p className={`font-display text-lg ${accent === "or" ? "text-or-600" : "text-petrole-800"}`}>{value}</p>
+    <div className="bg-white px-3 py-4 sm:px-4 sm:py-4">
+      <p className="mb-1 text-xs font-medium uppercase tracking-wide text-petrole-500">{label}</p>
+      <p className={`font-display text-lg font-bold ${accent === "or" ? "text-or-600" : "text-petrole-800"}`}>{value}</p>
     </div>
   );
 }

@@ -25,12 +25,12 @@ export default function PropertiesPage() {
 
   return (
     <AppShell>
-      <div className="mb-8 flex items-center justify-between">
-        <h1 className="font-display text-2xl text-petrole-800">Propriétés</h1>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="font-display text-xl font-bold text-petrole-800 sm:text-2xl">Propriétés</h1>
         {canCreate && (
           <button
             onClick={() => setShowForm((s) => !s)}
-            className="bg-petrole-700 px-4 py-2 text-sm text-white hover:bg-petrole-800"
+            className="bg-petrole-700 px-4 py-2 text-sm font-semibold text-white hover:bg-petrole-800"
           >
             {showForm ? "Annuler" : "Ajouter une propriété"}
           </button>
@@ -56,19 +56,19 @@ export default function PropertiesPage() {
         </p>
       )}
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
         {properties.map((p) => (
           <Link
             key={p.id}
             href={`/properties/${p.id}`}
-            className="block border border-petrole-200 bg-white p-5 hover:border-petrole-400"
+            className="block border border-petrole-200 bg-white p-4 hover:border-petrole-400 sm:p-5"
           >
-            <h3 className="font-display text-lg text-petrole-800">{p.name}</h3>
+            <h3 className="font-display text-base font-bold text-petrole-800 sm:text-lg">{p.name}</h3>
             <p className="mb-3 text-sm text-petrole-500">
               {p.address}
               {user?.role !== "OWNER" && p.owner && ` · propriétaire : ${p.owner.name}`}
             </p>
-            <div className="flex gap-4 text-xs text-petrole-600">
+            <div className="flex flex-wrap gap-3 text-xs font-medium text-petrole-600">
               <span>{p._count?.units ?? 0} unité(s)</span>
               <span>{p._count?.tenants ?? 0} locataire(s)</span>
               {p.potentialIncome && <span>Revenu potentiel : {formatFcfa(p.potentialIncome)}/mois</span>}

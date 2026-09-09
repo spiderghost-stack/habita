@@ -45,9 +45,9 @@ export default function DashboardPage() {
 
   return (
     <AppShell>
-      <div className="mb-8 flex items-baseline justify-between">
-        <h1 className="font-display text-2xl text-petrole-800">Tableau de bord</h1>
-        {data && <span className="text-sm text-petrole-500">{monthLabel(data.period)}</span>}
+      <div className="mb-6 flex flex-wrap items-baseline justify-between gap-2">
+        <h1 className="font-display text-xl font-bold text-petrole-800 sm:text-2xl">Tableau de bord</h1>
+        {data && <span className="text-sm font-medium text-petrole-500">{monthLabel(data.period)}</span>}
       </div>
 
       {error && <p className="text-sm text-red-700">{error}</p>}
@@ -56,20 +56,20 @@ export default function DashboardPage() {
 
       {data && (
         <>
-          <div className="mb-8 grid grid-cols-2 gap-px overflow-hidden border border-petrole-200 bg-petrole-200 md:grid-cols-4">
+          <div className="mb-6 grid grid-cols-2 gap-px overflow-hidden border border-petrole-200 bg-petrole-200 sm:grid-cols-2 md:grid-cols-4">
             <Stat label="Loyers attendus" value={formatFcfa(data.rentExpected)} />
             <Stat label="Loyers collectés" value={formatFcfa(data.rentCollected)} accent="petrole" />
             <Stat label="Impayés" value={formatFcfa(data.rentOutstanding)} accent={data.rentOutstanding > 0 ? "or" : undefined} />
-            <Stat label="Locataires en retard" value={String(data.lateCount)} accent={data.lateCount > 0 ? "or" : undefined} />
+            <Stat label="En retard" value={String(data.lateCount)} accent={data.lateCount > 0 ? "or" : undefined} />
           </div>
 
-          <div className="mb-8 grid grid-cols-3 gap-px overflow-hidden border border-petrole-200 bg-petrole-200">
+          <div className="mb-6 grid grid-cols-3 gap-px overflow-hidden border border-petrole-200 bg-petrole-200">
             <Stat label="Propriétés" value={String(data.properties)} compact />
             <Stat label="Unités" value={String(data.units)} compact />
-            <Stat label="Taux d'occupation" value={`${data.occupancyRate}%`} compact />
+            <Stat label="Occupation" value={`${data.occupancyRate}%`} compact />
           </div>
 
-          <div className="mb-8 grid grid-cols-2 gap-px overflow-hidden border border-petrole-200 bg-petrole-200 md:grid-cols-3">
+          <div className="mb-6 grid grid-cols-2 gap-px overflow-hidden border border-petrole-200 bg-petrole-200">
             <Stat label="Dépenses" value={formatFcfa(data.totalExpenses)} />
             <Stat
               label="Revenu net"
@@ -78,20 +78,20 @@ export default function DashboardPage() {
             />
           </div>
 
-          <div className="mb-8 border border-petrole-200 bg-white p-5">
-            <div className="flex items-center justify-between">
+          <div className="mb-6 border border-petrole-200 bg-white p-4 sm:p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="font-display text-lg text-petrole-800">Rappels de loyer</h2>
+                <h2 className="font-display text-base font-bold text-petrole-800 sm:text-lg">Rappels de loyer</h2>
                 <p className="text-sm text-petrole-500">
-                  Envoie par email les rappels d'échéance et de retard aux locataires concernés (une seule fois par échéance).
+                  Envoie par email les rappels d'échéance et de retard aux locataires (une seule fois par échéance).
                 </p>
               </div>
               <button
                 onClick={handleSendReminders}
                 disabled={sending}
-                className="whitespace-nowrap bg-petrole-700 px-4 py-2 text-sm text-white hover:bg-petrole-800 disabled:opacity-60"
+                className="w-full shrink-0 bg-petrole-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-petrole-800 disabled:opacity-60 sm:w-auto"
               >
-                {sending ? "Envoi…" : "Envoyer les rappels maintenant"}
+                {sending ? "Envoi…" : "Envoyer les rappels"}
               </button>
             </div>
             {notifError && <p className="mt-3 text-sm text-red-700">{notifError}</p>}
@@ -105,7 +105,7 @@ export default function DashboardPage() {
           </div>
 
           <section>
-            <h2 className="mb-3 font-display text-lg text-petrole-800">Locataires en retard</h2>
+            <h2 className="mb-3 font-display text-base font-bold text-petrole-800 sm:text-lg">Locataires en retard</h2>
             {data.lateTenants.length === 0 ? (
               <p className="border border-petrole-200 bg-white px-4 py-6 text-sm text-petrole-500">
                 Aucun retard ce mois-ci.
@@ -146,10 +146,10 @@ function Stat({
   compact?: boolean;
 }) {
   return (
-    <div className="bg-white px-4 py-5">
-      <p className="mb-1 text-xs uppercase tracking-wide text-petrole-500">{label}</p>
+    <div className="bg-white px-3 py-4 sm:px-4 sm:py-5">
+      <p className="mb-1 text-xs font-medium uppercase tracking-wide text-petrole-500">{label}</p>
       <p
-        className={`font-display ${compact ? "text-lg" : "text-2xl"} ${
+        className={`font-display font-bold ${compact ? "text-lg" : "text-xl sm:text-2xl"} ${
           accent === "or" ? "text-or-600" : accent === "petrole" ? "text-petrole-600" : "text-petrole-800"
         }`}
       >

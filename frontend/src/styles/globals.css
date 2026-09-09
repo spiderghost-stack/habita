@@ -3,11 +3,24 @@
 @tailwind utilities;
 
 :root {
-  --font-display: "Fraunces", serif;
-  --font-body: "Inter", sans-serif;
+  --font-display: "Manrope", sans-serif;
+  --font-body: "Plus Jakarta Sans", sans-serif;
+}
+
+html,
+body {
+  overflow-x: hidden;
 }
 
 body {
   background-color: #f7f6f2;
   color: #0f3733;
+  font-family: var(--font-body), sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Empêche les éléments de créer un overflow horizontal */
+* {
+  min-width: 0;
 }

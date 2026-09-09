@@ -61,9 +61,9 @@ export default function TenantDetailPage() {
 
   return (
     <AppShell>
-      <div className="mb-4 flex items-start justify-between">
+      <div className="mb-4 flex flex-col items-start justify-between gap-3 sm:flex-row">
         <div>
-          <h1 className="font-display text-2xl text-petrole-800">{tenant.firstName} {tenant.lastName}</h1>
+          <h1 className="font-display text-xl font-bold text-petrole-800 sm:text-2xl">{tenant.firstName} {tenant.lastName}</h1>
           <p className="text-sm text-petrole-500">{tenant.unit?.identifier ?? "Unité non assignée"} · {tenant.phone}</p>
         </div>
         <div className="flex items-center gap-4">
@@ -89,7 +89,7 @@ export default function TenantDetailPage() {
         />
       )}
 
-      <div className="mb-8 grid grid-cols-3 gap-px overflow-hidden border border-petrole-200 bg-petrole-200">
+      <div className="mb-6 grid grid-cols-1 gap-px overflow-hidden border border-petrole-200 bg-petrole-200 sm:grid-cols-3">
         <div className="bg-white px-4 py-4">
           <p className="mb-1 text-xs uppercase tracking-wide text-petrole-500">Loyer</p>
           <p className="font-display text-lg text-petrole-800">{formatFcfa(tenant.rentAmount)}</p>
@@ -107,7 +107,7 @@ export default function TenantDetailPage() {
       <PortalAccessSection tenant={tenant} />
 
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="font-display text-lg text-petrole-800">Historique des paiements</h2>
+        <h2 className="font-display text-lg font-bold text-petrole-800">Historique des paiements</h2>
         <button onClick={() => setShowForm((s) => !s)} className="text-sm text-or-600 underline">
           {showForm ? "Annuler" : "Enregistrer un paiement"}
         </button>
@@ -153,19 +153,19 @@ function PaymentRow({ payment }: { payment: Payment }) {
   }
 
   return (
-    <div className="flex items-center justify-between border-b border-petrole-100 px-4 py-3 text-sm last:border-b-0">
-      <div>
-        <p className="text-petrole-800">{payment.period}</p>
-        <p className="text-xs text-petrole-500">
+    <div className="flex items-center justify-between border-b border-petrole-100 px-4 py-3 text-sm last:border-b-0 hover:bg-fond">
+      <div className="min-w-0 flex-1 pr-3">
+        <p className="truncate font-medium text-petrole-800">{payment.period}</p>
+        <p className="truncate text-xs text-petrole-500">
           {new Date(payment.paymentDate).toLocaleDateString("fr-FR")} · {METHOD_LABEL[payment.method]} · reçu {payment.receiptNumber}
         </p>
         {error && <p className="mt-1 text-xs text-red-700">{error}</p>}
       </div>
-      <div className="flex items-center gap-3">
-        <button onClick={handleDownload} disabled={downloading} className="text-xs text-or-600 underline disabled:opacity-60">
-          {downloading ? "…" : "Reçu PDF"}
+      <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+        <button onClick={handleDownload} disabled={downloading} className="text-xs font-medium text-or-600 underline disabled:opacity-60">
+          {downloading ? "…" : "PDF"}
         </button>
-        <span className="text-petrole-700">{formatFcfa(payment.amount)}</span>
+        <span className="font-semibold text-petrole-700">{formatFcfa(payment.amount)}</span>
       </div>
     </div>
   );
@@ -191,7 +191,7 @@ function PortalAccessSection({ tenant }: { tenant: Tenant }) {
 
   return (
     <div className="mb-8 border border-petrole-200 bg-white p-5">
-      <h2 className="mb-2 font-display text-lg text-petrole-800">Espace locataire</h2>
+      <h2 className="mb-2 font-display text-lg font-bold text-petrole-800">Espace locataire</h2>
 
       {!tenant.email && (
         <p className="text-sm text-petrole-500">
@@ -298,7 +298,7 @@ function TenantEditForm({ tenant, onSaved }: { tenant: Tenant; onSaved: () => vo
       <button
         type="submit"
         disabled={submitting}
-        className="bg-petrole-700 px-4 py-2 text-sm text-white hover:bg-petrole-800 disabled:opacity-60"
+        className="w-full bg-petrole-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-petrole-800 disabled:opacity-60 sm:w-auto"
       >
         {submitting ? "Enregistrement…" : "Enregistrer les modifications"}
       </button>
@@ -374,7 +374,7 @@ function PaymentForm({
       <button
         type="submit"
         disabled={submitting}
-        className="mt-3 bg-petrole-700 px-4 py-2 text-sm text-white hover:bg-petrole-800 disabled:opacity-60"
+        className="mt-3 w-full bg-petrole-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-petrole-800 disabled:opacity-60 sm:w-auto"
       >
         {submitting ? "Enregistrement…" : "Enregistrer le paiement"}
       </button>

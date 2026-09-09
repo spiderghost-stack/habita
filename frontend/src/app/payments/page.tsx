@@ -39,7 +39,7 @@ export default function PaymentsPage() {
 
   return (
     <AppShell>
-      <h1 className="mb-8 font-display text-2xl text-petrole-800">Paiements récents</h1>
+      <h1 className="mb-6 font-display text-xl font-bold text-petrole-800 sm:text-2xl">Paiements récents</h1>
 
       {loading && <p className="text-sm text-petrole-500">Chargement…</p>}
 
@@ -77,17 +77,17 @@ function PaymentRow({ payment: p }: { payment: PaymentRow }) {
       href={`/tenants/${p.tenantId}`}
       className="flex items-center justify-between border-b border-petrole-100 px-4 py-3 text-sm last:border-b-0 hover:bg-fond"
     >
-      <div>
-        <p className="text-petrole-800">{p.tenant.firstName} {p.tenant.lastName} · {p.property.name}</p>
-        <p className="text-xs text-petrole-500">
-          {p.period} · {new Date(p.paymentDate).toLocaleDateString("fr-FR")} · {METHOD_LABEL[p.method]} · {p.receiptNumber}
+      <div className="min-w-0 flex-1 pr-3">
+        <p className="truncate font-medium text-petrole-800">{p.tenant.firstName} {p.tenant.lastName} · {p.property.name}</p>
+        <p className="truncate text-xs text-petrole-500">
+          {p.period} · {new Date(p.paymentDate).toLocaleDateString("fr-FR")} · {METHOD_LABEL[p.method]}
         </p>
       </div>
-      <div className="flex items-center gap-3">
-        <button onClick={handleDownload} disabled={downloading} className="text-xs text-or-600 underline disabled:opacity-60">
-          {downloading ? "…" : "Reçu PDF"}
+      <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+        <button onClick={handleDownload} disabled={downloading} className="text-xs font-medium text-or-600 underline disabled:opacity-60">
+          {downloading ? "…" : "PDF"}
         </button>
-        <span className="text-petrole-700">{formatFcfa(p.amount)}</span>
+        <span className="font-semibold text-petrole-700">{formatFcfa(p.amount)}</span>
       </div>
     </Link>
   );

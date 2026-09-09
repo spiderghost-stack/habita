@@ -34,7 +34,7 @@ export default function IssuesPage() {
 
   return (
     <AppShell>
-      <h1 className="mb-8 font-display text-2xl text-petrole-800">Signalements</h1>
+      <h1 className="mb-6 font-display text-xl font-bold text-petrole-800 sm:text-2xl">Signalements</h1>
 
       {error && <p className="mb-4 text-sm text-red-700">{error}</p>}
       {loading && <p className="text-sm text-petrole-500">Chargement…</p>}
@@ -77,15 +77,15 @@ function IssueCard({ issue, onChanged }: { issue: Issue; onChanged: () => void }
   }
 
   return (
-    <div className="border border-petrole-200 bg-white p-5">
-      <div className="mb-2 flex items-start justify-between">
-        <div>
-          <p className="text-petrole-800">
+    <div className="border border-petrole-200 bg-white p-4 sm:p-5">
+      <div className="mb-2 flex flex-wrap items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <p className="font-medium text-petrole-800">
             {issue.category} · {issue.tenant?.firstName} {issue.tenant?.lastName} · {issue.property?.name}
           </p>
           <p className="text-xs text-petrole-500">{new Date(issue.createdAt).toLocaleDateString("fr-FR")}</p>
         </div>
-        <span className={`px-2 py-0.5 text-xs ${STATUS_STYLE[issue.status]}`}>{STATUS_LABEL[issue.status]}</span>
+        <span className={`shrink-0 rounded px-2 py-0.5 text-xs font-medium ${STATUS_STYLE[issue.status]}`}>{STATUS_LABEL[issue.status]}</span>
       </div>
 
       <p className="mb-3 text-sm text-petrole-700">{issue.description}</p>
@@ -135,7 +135,7 @@ function IssueCard({ issue, onChanged }: { issue: Issue; onChanged: () => void }
           <button
             type="submit"
             disabled={submitting}
-            className="bg-petrole-700 px-4 py-2 text-sm text-white hover:bg-petrole-800 disabled:opacity-60"
+            className="bg-petrole-700 px-4 py-2 text-sm font-semibold text-white hover:bg-petrole-800 disabled:opacity-60"
           >
             {submitting ? "Enregistrement…" : "Enregistrer"}
           </button>

@@ -1,10 +1,21 @@
 import type { Metadata } from "next";
-import { Fraunces, Inter } from "next/font/google";
+import { Manrope, Plus_Jakarta_Sans } from "next/font/google";
 import { AuthProvider } from "@/lib/auth";
 import "@/styles/globals.css";
 
-const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-display", weight: ["500", "600"] });
-const inter = Inter({ subsets: ["latin"], variable: "--font-body" });
+const manrope = Manrope({
+  subsets: ["latin"],
+  variable: "--font-display",
+  weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
+});
+
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-body",
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "HaBiTa — Gestion immobilière",
@@ -14,7 +25,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr">
-      <body className={`${fraunces.variable} ${inter.variable} font-body`}>
+      <body className={`${manrope.variable} ${plusJakartaSans.variable} font-body antialiased`}>
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

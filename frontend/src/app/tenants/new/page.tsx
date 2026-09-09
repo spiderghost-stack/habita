@@ -69,7 +69,7 @@ function NewTenantForm() {
       {error && <p className="mb-4 border-l-2 border-or-400 bg-or-50 px-3 py-2 text-sm">{error}</p>}
 
       <div className="mb-4">
-        <label className="mb-1 block text-xs uppercase tracking-wide text-petrole-500">Propriété</label>
+        <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-petrole-500">Propriété</label>
         <select
           required
           value={propertyId}
@@ -84,7 +84,7 @@ function NewTenantForm() {
       </div>
 
       <div className="mb-4">
-        <label className="mb-1 block text-xs uppercase tracking-wide text-petrole-500">
+        <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-petrole-500">
           Unité (optionnel)
         </label>
         <select
@@ -100,35 +100,35 @@ function NewTenantForm() {
         </select>
       </div>
 
-      <div className="mb-4 grid grid-cols-2 gap-4">
+      <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-xs uppercase tracking-wide text-petrole-500">Prénom</label>
+          <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-petrole-500">Prénom</label>
           <input required value={firstName} onChange={(e) => setFirstName(e.target.value)} className="w-full border border-petrole-200 px-3 py-2 text-sm outline-none focus:border-petrole-500" />
         </div>
         <div>
-          <label className="mb-1 block text-xs uppercase tracking-wide text-petrole-500">Nom</label>
+          <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-petrole-500">Nom</label>
           <input required value={lastName} onChange={(e) => setLastName(e.target.value)} className="w-full border border-petrole-200 px-3 py-2 text-sm outline-none focus:border-petrole-500" />
         </div>
       </div>
 
-      <div className="mb-4 grid grid-cols-2 gap-4">
+      <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-xs uppercase tracking-wide text-petrole-500">Téléphone</label>
+          <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-petrole-500">Téléphone</label>
           <input required value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full border border-petrole-200 px-3 py-2 text-sm outline-none focus:border-petrole-500" />
         </div>
         <div>
-          <label className="mb-1 block text-xs uppercase tracking-wide text-petrole-500">Email (optionnel)</label>
+          <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-petrole-500">Email (optionnel)</label>
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full border border-petrole-200 px-3 py-2 text-sm outline-none focus:border-petrole-500" />
         </div>
       </div>
 
-      <div className="mb-6 grid grid-cols-2 gap-4">
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-xs uppercase tracking-wide text-petrole-500">Loyer mensuel (FCFA)</label>
+          <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-petrole-500">Loyer mensuel (FCFA)</label>
           <input required type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} className="w-full border border-petrole-200 px-3 py-2 text-sm outline-none focus:border-petrole-500" />
         </div>
         <div>
-          <label className="mb-1 block text-xs uppercase tracking-wide text-petrole-500">Jour d'échéance</label>
+          <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-petrole-500">Jour d'échéance</label>
           <input required type="number" min={1} max={28} value={dueDay} onChange={(e) => setDueDay(e.target.value)} className="w-full border border-petrole-200 px-3 py-2 text-sm outline-none focus:border-petrole-500" />
         </div>
       </div>
@@ -136,7 +136,7 @@ function NewTenantForm() {
       <button
         type="submit"
         disabled={submitting}
-        className="bg-petrole-700 px-4 py-2 text-sm text-white hover:bg-petrole-800 disabled:opacity-60"
+        className="w-full bg-petrole-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-petrole-800 disabled:opacity-60 sm:w-auto"
       >
         {submitting ? "Ajout…" : "Ajouter le locataire"}
       </button>
@@ -147,7 +147,7 @@ function NewTenantForm() {
 export default function NewTenantPage() {
   return (
     <AppShell>
-      <h1 className="mb-6 font-display text-2xl text-petrole-800">Ajouter un locataire</h1>
+      <h1 className="mb-6 font-display text-xl font-bold text-petrole-800 sm:text-2xl">Ajouter un locataire</h1>
       <Suspense fallback={<div>Chargement...</div>}>
         <NewTenantForm />
       </Suspense>

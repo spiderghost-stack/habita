@@ -92,30 +92,30 @@ export default function TenantPortalPage() {
 
   return (
     <TenantShell>
-      <div className="mb-6 flex items-start justify-between">
+      <div className="mb-6 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
         <div>
-          <h1 className="font-display text-2xl text-petrole-800">Bonjour {me.firstName}</h1>
+          <h1 className="font-display text-xl font-bold text-petrole-800 sm:text-2xl">Bonjour {me.firstName}</h1>
           <p className="text-sm text-petrole-500">{me.property.name} — {me.property.address}</p>
         </div>
         <StatusBadge status={me.status} />
       </div>
 
-      <div className="mb-8 grid grid-cols-2 gap-px overflow-hidden border border-petrole-200 bg-petrole-200">
+      <div className="mb-6 grid grid-cols-1 gap-px overflow-hidden border border-petrole-200 bg-petrole-200 sm:grid-cols-2">
         <div className="bg-white px-4 py-4">
-          <p className="mb-1 text-xs uppercase tracking-wide text-petrole-500">Logement</p>
-          <p className="font-display text-lg text-petrole-800">{me.unit?.identifier ?? "Non assigné"}</p>
+          <p className="mb-1 text-xs font-medium uppercase tracking-wide text-petrole-500">Logement</p>
+          <p className="font-display text-lg font-bold text-petrole-800">{me.unit?.identifier ?? "Non assigné"}</p>
         </div>
         <div className="bg-white px-4 py-4">
-          <p className="mb-1 text-xs uppercase tracking-wide text-petrole-500">Loyer mensuel</p>
-          <p className="font-display text-lg text-petrole-800">{formatFcfa(me.rentAmount)}</p>
+          <p className="mb-1 text-xs font-medium uppercase tracking-wide text-petrole-500">Loyer mensuel</p>
+          <p className="font-display text-lg font-bold text-petrole-800">{formatFcfa(me.rentAmount)}</p>
         </div>
-        <div className="bg-white px-4 py-4">
-          <p className="mb-1 text-xs uppercase tracking-wide text-petrole-500">Échéance</p>
-          <p className="font-display text-lg text-petrole-800">Le {me.dueDay} de chaque mois</p>
+        <div className="bg-white px-4 py-4 sm:col-span-2">
+          <p className="mb-1 text-xs font-medium uppercase tracking-wide text-petrole-500">Échéance</p>
+          <p className="font-display text-lg font-bold text-petrole-800">Le {me.dueDay} de chaque mois</p>
         </div>
       </div>
 
-      <h2 className="mb-3 font-display text-lg text-petrole-800">Historique des paiements</h2>
+      <h2 className="mb-3 font-display text-lg font-bold text-petrole-800">Historique des paiements</h2>
       <div className="border border-petrole-200 bg-white">
         {payments.length === 0 && (
           <p className="px-4 py-6 text-sm text-petrole-500">Aucun paiement enregistré pour l'instant.</p>
@@ -125,10 +125,10 @@ export default function TenantPortalPage() {
         ))}
       </div>
 
-      <h2 className="mb-3 font-display text-lg text-petrole-800">Signaler un problème</h2>
+      <h2 className="mb-3 mt-8 font-display text-lg font-bold text-petrole-800">Signaler un problème</h2>
       <IssueSection issues={issues} onCreated={refreshIssues} />
 
-      <h2 className="mb-3 font-display text-lg text-petrole-800">Messages</h2>
+      <h2 className="mb-3 mt-8 font-display text-lg font-bold text-petrole-800">Messages</h2>
       <MessagesSection />
 
       <p className="mt-6 text-xs text-petrole-400">
@@ -289,7 +289,7 @@ function IssueSection({ issues, onCreated }: { issues: TenantIssue[]; onCreated:
           <button
             type="submit"
             disabled={submitting}
-            className="bg-petrole-700 px-4 py-2 text-sm text-white hover:bg-petrole-800 disabled:opacity-60"
+            className="w-full shrink-0 bg-petrole-700 px-4 py-2 text-sm font-semibold text-white hover:bg-petrole-800 disabled:opacity-60 sm:w-auto"
           >
             {submitting ? "Envoi…" : "Envoyer le signalement"}
           </button>
@@ -332,18 +332,18 @@ function PaymentRow({ payment }: { payment: TenantPayment }) {
   }
 
   return (
-    <div className="flex items-center justify-between border-b border-petrole-100 px-4 py-3 text-sm last:border-b-0">
-      <div>
-        <p className="text-petrole-800">{payment.period}</p>
-        <p className="text-xs text-petrole-500">
+    <div className="flex items-center justify-between border-b border-petrole-100 px-4 py-3 text-sm last:border-b-0 hover:bg-fond">
+      <div className="min-w-0 flex-1 pr-3">
+        <p className="truncate font-medium text-petrole-800">{payment.period}</p>
+        <p className="truncate text-xs text-petrole-500">
           {new Date(payment.paymentDate).toLocaleDateString("fr-FR")} · {METHOD_LABEL[payment.method]}
         </p>
       </div>
-      <div className="flex items-center gap-3">
-        <button onClick={handleDownload} disabled={downloading} className="text-xs text-or-600 underline disabled:opacity-60">
-          {downloading ? "…" : "Reçu PDF"}
+      <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+        <button onClick={handleDownload} disabled={downloading} className="text-xs font-medium text-or-600 underline disabled:opacity-60">
+          {downloading ? "…" : "PDF"}
         </button>
-        <span className="text-petrole-700">{formatFcfa(payment.amount)}</span>
+        <span className="font-semibold text-petrole-700">{formatFcfa(payment.amount)}</span>
       </div>
     </div>
   );

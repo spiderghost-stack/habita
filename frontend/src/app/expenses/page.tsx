@@ -25,11 +25,11 @@ export default function ExpensesPage() {
 
   return (
     <AppShell>
-      <div className="mb-8 flex items-center justify-between">
-        <h1 className="font-display text-2xl text-petrole-800">Dépenses</h1>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="font-display text-xl font-bold text-petrole-800 sm:text-2xl">Dépenses</h1>
         <button
           onClick={() => setShowForm((s) => !s)}
-          className="bg-petrole-700 px-4 py-2 text-sm text-white hover:bg-petrole-800"
+          className="bg-petrole-700 px-4 py-2 text-sm font-semibold text-white hover:bg-petrole-800"
         >
           {showForm ? "Annuler" : "Enregistrer une dépense"}
         </button>
@@ -58,15 +58,15 @@ export default function ExpensesPage() {
       <div className="border border-petrole-200 bg-white">
         {expenses.map((e) => (
           <div key={e.id} className="flex items-center justify-between border-b border-petrole-100 px-4 py-3 text-sm last:border-b-0">
-            <div>
-              <p className="text-petrole-800">{e.label} · {e.property?.name}</p>
-              <p className="text-xs text-petrole-500">
+            <div className="min-w-0 flex-1 pr-3">
+              <p className="truncate font-medium text-petrole-800">{e.label} · {e.property?.name}</p>
+              <p className="truncate text-xs text-petrole-500">
                 {new Date(e.expenseDate).toLocaleDateString("fr-FR")}
                 {e.category ? ` · ${e.category}` : ""}
                 {e.comment ? ` · ${e.comment}` : ""}
               </p>
             </div>
-            <span className="text-or-600">{formatFcfa(e.amount)}</span>
+            <span className="shrink-0 font-semibold text-or-600">{formatFcfa(e.amount)}</span>
           </div>
         ))}
       </div>
@@ -162,7 +162,7 @@ function ExpenseForm({ properties, onCreated }: { properties: Property[]; onCrea
       <button
         type="submit"
         disabled={submitting}
-        className="mt-4 bg-petrole-700 px-4 py-2 text-sm text-white hover:bg-petrole-800 disabled:opacity-60"
+        className="mt-4 bg-petrole-700 px-4 py-2 text-sm font-semibold text-white hover:bg-petrole-800 disabled:opacity-60"
       >
         {submitting ? "Enregistrement…" : "Enregistrer la dépense"}
       </button>

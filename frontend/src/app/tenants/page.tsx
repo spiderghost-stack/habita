@@ -21,9 +21,9 @@ export default function TenantsPage() {
 
   return (
     <AppShell>
-      <div className="mb-8 flex items-center justify-between">
-        <h1 className="font-display text-2xl text-petrole-800">Locataires</h1>
-        <Link href="/tenants/new" className="bg-petrole-700 px-4 py-2 text-sm text-white hover:bg-petrole-800">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="font-display text-xl font-bold text-petrole-800 sm:text-2xl">Locataires</h1>
+        <Link href="/tenants/new" className="bg-petrole-700 px-4 py-2 text-sm font-semibold text-white hover:bg-petrole-800">
           Ajouter un locataire
         </Link>
       </div>
@@ -43,9 +43,9 @@ export default function TenantsPage() {
             href={`/tenants/${t.id}`}
             className="flex items-center justify-between border-b border-petrole-100 px-4 py-3 text-sm last:border-b-0 hover:bg-fond"
           >
-            <div>
-              <p className="text-petrole-800">{t.firstName} {t.lastName}</p>
-              <p className="text-xs text-petrole-500">{t.unit?.identifier ?? "Unité non assignée"} · {formatFcfa(t.rentAmount)}/mois</p>
+            <div className="min-w-0 flex-1 pr-3">
+              <p className="truncate font-medium text-petrole-800">{t.firstName} {t.lastName}</p>
+              <p className="truncate text-xs text-petrole-500">{t.unit?.identifier ?? "Unité non assignée"} · {formatFcfa(t.rentAmount)}/mois</p>
             </div>
             <StatusBadge status={t.status} />
           </Link>

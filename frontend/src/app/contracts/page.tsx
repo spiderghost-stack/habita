@@ -31,11 +31,11 @@ export default function ContractsPage() {
 
   return (
     <AppShell>
-      <div className="mb-8 flex items-center justify-between">
-        <h1 className="font-display text-2xl text-petrole-800">Contrats</h1>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="font-display text-xl font-bold text-petrole-800 sm:text-2xl">Contrats</h1>
         <button
           onClick={() => setShowForm((s) => !s)}
-          className="bg-petrole-700 px-4 py-2 text-sm text-white hover:bg-petrole-800"
+          className="bg-petrole-700 px-4 py-2 text-sm font-semibold text-white hover:bg-petrole-800"
         >
           {showForm ? "Annuler" : "Nouveau contrat"}
         </button>

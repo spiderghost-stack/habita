@@ -66,7 +66,7 @@ export default function PropertyDetailPage() {
 
       <div className="mb-2 flex items-start justify-between">
         <div>
-          <h1 className="font-display text-2xl text-petrole-800">{property.name}</h1>
+          <h1 className="font-display text-xl font-bold text-petrole-800 sm:text-2xl">{property.name}</h1>
           <p className="text-sm text-petrole-500">{property.address}</p>
         </div>
         <div className="flex gap-3 text-sm">
@@ -101,7 +101,7 @@ export default function PropertyDetailPage() {
 
       <section className="mb-10">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-display text-lg text-petrole-800">Unités</h2>
+          <h2 className="font-display text-lg font-bold text-petrole-800">Unités</h2>
           <button onClick={() => setShowUnitForm((s) => !s)} className="text-sm text-or-600 underline">
             {showUnitForm ? "Annuler" : "+ Ajouter une unité"}
           </button>
@@ -129,7 +129,7 @@ export default function PropertyDetailPage() {
 
       <section>
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-display text-lg text-petrole-800">Locataires</h2>
+          <h2 className="font-display text-lg font-bold text-petrole-800">Locataires</h2>
           <Link href={`/tenants/new?propertyId=${property.id}`} className="text-sm text-or-600 underline">
             + Ajouter un locataire
           </Link>
@@ -194,7 +194,7 @@ function ManagersSection({ property, onChanged }: { property: Property; onChange
   return (
     <div className="mb-6 border border-petrole-200 bg-white p-5">
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="font-display text-lg text-petrole-800">Gestionnaires</h2>
+        <h2 className="font-display text-lg font-bold text-petrole-800">Gestionnaires</h2>
         <button onClick={() => setShowForm((s) => !s)} className="text-sm text-or-600 underline">
           {showForm ? "Annuler" : "+ Assigner un gestionnaire"}
         </button>
@@ -228,7 +228,7 @@ function ManagersSection({ property, onChanged }: { property: Property; onChange
           <button
             type="submit"
             disabled={submitting}
-            className="bg-petrole-700 px-4 py-2 text-sm text-white hover:bg-petrole-800 disabled:opacity-60"
+            className="w-full shrink-0 bg-petrole-700 px-4 py-2 text-sm font-semibold text-white hover:bg-petrole-800 disabled:opacity-60 sm:w-auto"
           >
             {submitting ? "…" : "Assigner"}
           </button>
@@ -318,7 +318,7 @@ function PropertyEditForm({ property, onSaved }: { property: Property; onSaved: 
       <button
         type="submit"
         disabled={submitting}
-        className="mt-4 bg-petrole-700 px-4 py-2 text-sm text-white hover:bg-petrole-800 disabled:opacity-60"
+        className="mt-4 w-full bg-petrole-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-petrole-800 disabled:opacity-60 sm:w-auto"
       >
         {submitting ? "Enregistrement…" : "Enregistrer les modifications"}
       </button>
@@ -452,7 +452,7 @@ function UnitForm({ propertyId, onCreated }: { propertyId: string; onCreated: ()
       <button
         type="submit"
         disabled={submitting}
-        className="mt-3 bg-petrole-700 px-4 py-2 text-sm text-white hover:bg-petrole-800 disabled:opacity-60"
+        className="mt-3 w-full bg-petrole-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-petrole-800 disabled:opacity-60 sm:w-auto"
       >
         {submitting ? "Ajout…" : "Ajouter l'unité"}
       </button>
@@ -503,7 +503,7 @@ function ScoreSection({ propertyId }: { propertyId: string }) {
   if (locked) {
     return (
       <div className="mb-6 border border-petrole-200 bg-white p-5">
-        <h2 className="mb-1 font-display text-lg text-petrole-800">Score de gestion</h2>
+        <h2 className="mb-1 font-display text-lg font-bold text-petrole-800">Score de gestion</h2>
         <p className="text-sm text-petrole-500">{locked}</p>
       </div>
     );
@@ -513,8 +513,8 @@ function ScoreSection({ propertyId }: { propertyId: string }) {
 
   return (
     <div className="mb-6 border border-petrole-200 bg-white p-5">
-      <h2 className="mb-3 font-display text-lg text-petrole-800">Score de gestion</h2>
-      <p className="mb-3 font-display text-3xl text-petrole-800">{score.score} / 100</p>
+      <h2 className="mb-3 font-display text-lg font-bold text-petrole-800">Score de gestion</h2>
+      <p className="mb-3 font-display text-3xl font-bold text-petrole-800">{score.score} / 100</p>
       <div className="grid grid-cols-2 gap-2 text-xs text-petrole-500 md:grid-cols-5">
         <span>Paiements : {score.breakdown.paymentRate}%</span>
         <span>Occupation : {score.breakdown.occupancyRate}%</span>
