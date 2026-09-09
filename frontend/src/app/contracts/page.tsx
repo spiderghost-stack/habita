@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
+import { ConfirmModal } from "@/components/ConfirmModal";
 import { api, ApiError } from "@/lib/api";
 import { Contract, Tenant } from "@/lib/types";
 import { formatFcfa } from "@/lib/format";
@@ -73,6 +74,7 @@ export default function ContractsPage() {
 function ContractRow({ contract, onChanged }: { contract: Contract; onChanged: () => void }) {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [confirmTerminate, setConfirmTerminate] = useState(false);
 
   async function handleRenew() {
     const input = window.prompt("Nouvelle date de fin (AAAA-MM-JJ) :");
@@ -94,7 +96,7 @@ function ContractRow({ contract, onChanged }: { contract: Contract; onChanged: (
   }
 
   async function handleTerminate() {
-    if (!window.confirm("Résilier ce contrat ?")) return;
+    setConfirmTerminate(false);
     setBusy(true);
     try {
       await api.post(`/contracts/${contract.id}/terminate`);
@@ -131,7 +133,7 @@ function ContractRow({ contract, onChanged }: { contract: Contract; onChanged: (
               <button onClick={handleRenew} disabled={busy} className="text-xs text-or-600 underline disabled:opacity-60">
                 Renouveler
               </button>
-              <button onClick={handleTerminate} disabled={busy} className="text-xs text-red-700 underline disabled:opacity-60">
+              <button onClick={() => setConfirmTerminate(true)} disabled={busy} className="text-xs text-red-700 underline disabled:opacity-60">
                 Résilier
               </button>
             </>
@@ -139,6 +141,15 @@ function ContractRow({ contract, onChanged }: { contract: Contract; onChanged: (
         </div>
       </div>
       {error && <p className="mt-1 text-xs text-red-700">{error}</p>}
+
+      <ConfirmModal
+        isOpen={confirmTerminate}
+        title="Résilier ce contrat ?"
+        description="Voulez-vous vraiment résilier ce contrat ?"
+        confirmLabel="Résilier"
+        onConfirm={handleTerminate}
+        onCancel={() => setConfirmTerminate(false)}
+      />
     </div>
   );
 }

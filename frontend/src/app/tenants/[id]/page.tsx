@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
+import { ConfirmModal } from "@/components/ConfirmModal";
 import { StatusBadge } from "@/components/StatusBadge";
 import { api, ApiError, downloadFile } from "@/lib/api";
 import { Tenant, Payment } from "@/lib/types";
@@ -29,6 +30,7 @@ export default function TenantDetailPage() {
   const [showEditForm, setShowEditForm] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [movingOut, setMovingOut] = useState(false);
+  const [confirmMoveOut, setConfirmMoveOut] = useState(false);
 
   function refresh() {
     return api.get<Tenant>(`/tenants/${params.id}`).then(setTenant);
@@ -41,10 +43,7 @@ export default function TenantDetailPage() {
 
   async function handleMoveOut() {
     if (!tenant) return;
-    const confirmed = window.confirm(
-      `Marquer le départ de ${tenant.firstName} ${tenant.lastName} ? Son historique de paiement est conservé, mais son unité redevient disponible et il disparaît des listes actives.`
-    );
-    if (!confirmed) return;
+    setConfirmMoveOut(false);
 
     setMovingOut(true);
     try {
@@ -72,12 +71,21 @@ export default function TenantDetailPage() {
             <button onClick={() => setShowEditForm((s) => !s)} className="text-or-600 underline">
               {showEditForm ? "Annuler" : "Modifier"}
             </button>
-            <button onClick={handleMoveOut} disabled={movingOut} className="text-red-700 underline disabled:opacity-60">
+            <button onClick={() => setConfirmMoveOut(true)} disabled={movingOut} className="text-red-700 underline disabled:opacity-60">
               {movingOut ? "…" : "Marquer le départ"}
             </button>
           </div>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={confirmMoveOut}
+        title="Marquer le départ ?"
+        description={`Marquer le départ de ${tenant.firstName} ${tenant.lastName} ? Son historique de paiement est conservé, mais son unité redevient disponible et il disparaît des listes actives.`}
+        confirmLabel="Marquer le départ"
+        onConfirm={handleMoveOut}
+        onCancel={() => setConfirmMoveOut(false)}
+      />
 
       {showEditForm && (
         <TenantEditForm

@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { AppShell } from "@/components/AppShell";
+import { ConfirmModal } from "@/components/ConfirmModal";
 import { StatusBadge } from "@/components/StatusBadge";
 import { useAuth } from "@/lib/auth";
 import { api, ApiError } from "@/lib/api";
@@ -26,6 +27,7 @@ export default function PropertyDetailPage() {
   const [showEditForm, setShowEditForm] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   function refresh() {
     return api.get<Property>(`/properties/${params.id}`).then(setProperty);
@@ -43,7 +45,8 @@ export default function PropertyDetailPage() {
     const warning = hasUnits || hasTenants
       ? `Supprimer "${property.name}" effacera aussi ses ${property.units?.length ?? 0} unité(s) et l'historique de paiement de ses ${property.tenants?.length ?? 0} locataire(s). Cette action est irréversible. Continuer ?`
       : `Supprimer "${property.name}" ? Cette action est irréversible.`;
-    if (!window.confirm(warning)) return;
+
+    setConfirmDelete(false);
 
     setDeleting(true);
     try {
@@ -75,13 +78,26 @@ export default function PropertyDetailPage() {
               <button onClick={() => setShowEditForm((s) => !s)} className="text-or-600 underline">
                 {showEditForm ? "Annuler" : "Modifier"}
               </button>
-              <button onClick={handleDeleteProperty} disabled={deleting} className="text-red-700 underline disabled:opacity-60">
+              <button onClick={() => setConfirmDelete(true)} disabled={deleting} className="text-red-700 underline disabled:opacity-60">
                 {deleting ? "Suppression…" : "Supprimer"}
               </button>
             </>
           )}
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={confirmDelete}
+        title="Supprimer la propriété ?"
+        description={
+          (property.units ?? []).length > 0 || (property.tenants ?? []).length > 0
+            ? `Supprimer "${property.name}" effacera aussi ses ${property.units?.length ?? 0} unité(s) et l'historique de paiement de ses ${property.tenants?.length ?? 0} locataire(s). Cette action est irréversible. Continuer ?`
+            : `Supprimer "${property.name}" ? Cette action est irréversible.`
+        }
+        confirmLabel="Supprimer"
+        onConfirm={handleDeleteProperty}
+        onCancel={() => setConfirmDelete(false)}
+      />
 
       {showEditForm && canManageProperty && (
         <PropertyEditForm
@@ -161,6 +177,7 @@ function ManagersSection({ property, onChanged }: { property: Property; onChange
   const [credentials, setCredentials] = useState<{ email: string; temporaryPassword?: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
 
   async function handleAssign(e: FormEvent) {
     e.preventDefault();
@@ -182,7 +199,7 @@ function ManagersSection({ property, onChanged }: { property: Property; onChange
   }
 
   async function handleRemove(managerId: string) {
-    if (!window.confirm("Retirer l'accès de ce gestionnaire à cette propriété ?")) return;
+    setConfirmRemove(null);
     try {
       await api.delete(`/properties/${property.id}/managers/${managerId}`);
       onChanged();
@@ -207,7 +224,7 @@ function ManagersSection({ property, onChanged }: { property: Property; onChange
           {property.managers!.map((m) => (
             <li key={m.id} className="flex items-center justify-between border-b border-petrole-100 py-2 last:border-b-0">
               <span className="text-petrole-800">{m.manager.name} · {m.manager.email}</span>
-              <button onClick={() => handleRemove(m.managerId)} className="text-xs text-red-700 underline">
+              <button onClick={() => setConfirmRemove(m.managerId)} className="text-xs text-red-700 underline">
                 Retirer
               </button>
             </li>
@@ -255,6 +272,17 @@ function ManagersSection({ property, onChanged }: { property: Property; onChange
           )}
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={confirmRemove !== null}
+        title="Retirer le gestionnaire ?"
+        description="Voulez-vous retirer l'accès de ce gestionnaire à cette propriété ?"
+        confirmLabel="Retirer"
+        onConfirm={() => {
+          if (confirmRemove) handleRemove(confirmRemove);
+        }}
+        onCancel={() => setConfirmRemove(null)}
+      />
     </div>
   );
 }
@@ -334,6 +362,7 @@ function UnitRow({ unit, onChanged }: { unit: Unit; onChanged: () => void }) {
   const [status, setStatus] = useState(unit.status);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   async function handleSave(e: FormEvent) {
     e.preventDefault();
@@ -351,7 +380,7 @@ function UnitRow({ unit, onChanged }: { unit: Unit; onChanged: () => void }) {
   }
 
   async function handleDelete() {
-    if (!window.confirm(`Supprimer l'unité "${unit.identifier}" ? Cette action est irréversible.`)) return;
+    setConfirmDelete(false);
     try {
       await api.delete(`/units/${unit.id}`);
       onChanged();
@@ -396,8 +425,17 @@ function UnitRow({ unit, onChanged }: { unit: Unit; onChanged: () => void }) {
       <div className="flex items-center gap-3">
         <span className="text-xs text-petrole-500">{UNIT_STATUS_LABEL[unit.status]}</span>
         <button onClick={() => setEditing(true)} className="text-xs text-or-600 underline">Modifier</button>
-        <button onClick={handleDelete} className="text-xs text-red-700 underline">Supprimer</button>
+        <button onClick={() => setConfirmDelete(true)} className="text-xs text-red-700 underline">Supprimer</button>
       </div>
+
+      <ConfirmModal
+        isOpen={confirmDelete}
+        title="Supprimer l'unité ?"
+        description={`Supprimer l'unité "${unit.identifier}" ? Cette action est irréversible.`}
+        confirmLabel="Supprimer"
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmDelete(false)}
+      />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
+import { ConfirmModal } from "@/components/ConfirmModal";
 
 const BASE_NAV = [
   { href: "/dashboard", label: "Tableau de bord" },
@@ -25,6 +26,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [confirmLogout, setConfirmLogout] = useState(false);
 
   // Ferme la sidebar si on change de page
   useEffect(() => {
@@ -97,11 +99,20 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Link href="/profile" className="text-xs font-medium text-petrole-200 underline">
             Mon profil
           </Link>
-          <button onClick={logout} className="text-xs font-medium text-or-300 underline">
+          <button onClick={() => setConfirmLogout(true)} className="text-xs font-medium text-or-300 underline">
             Se déconnecter
           </button>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={confirmLogout}
+        title="Se déconnecter ?"
+        description="Voulez-vous vraiment vous déconnecter de votre compte ?"
+        confirmLabel="Déconnexion"
+        onConfirm={logout}
+        onCancel={() => setConfirmLogout(false)}
+      />
     </>
   );
 

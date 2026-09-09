@@ -5,10 +5,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
+import { ConfirmModal } from "@/components/ConfirmModal";
 
 export function TenantShell({ children }: { children: ReactNode }) {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
+  const [confirmLogout, setConfirmLogout] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) router.replace("/login");
@@ -37,12 +39,21 @@ export function TenantShell({ children }: { children: ReactNode }) {
           >
             {user.name}
           </Link>
-          <button onClick={logout} className="font-semibold text-or-600 underline">
+          <button onClick={() => setConfirmLogout(true)} className="font-semibold text-or-600 underline">
             Déconnexion
           </button>
         </div>
       </header>
       <div className="mx-auto max-w-2xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">{children}</div>
+
+      <ConfirmModal
+        isOpen={confirmLogout}
+        title="Se déconnecter ?"
+        description="Voulez-vous vraiment vous déconnecter de votre compte ?"
+        confirmLabel="Déconnexion"
+        onConfirm={logout}
+        onCancel={() => setConfirmLogout(false)}
+      />
     </div>
   );
 }
