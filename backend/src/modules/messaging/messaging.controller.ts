@@ -3,6 +3,7 @@ import { prisma } from "../../lib/prisma";
 import { assertPropertyAccess, ownerFilter } from "../../lib/ownership";
 import { ApiError } from "../../middleware/errorHandler";
 import { getOrCreateConversation, listMessages, createMessage } from "./messaging.service";
+import { sendPushNotification } from "../notifications/push.service";
 
 export async function listConversations(req: Request, res: Response) {
   const tenants = await prisma.tenant.findMany({
@@ -44,11 +45,43 @@ export async function getMessages(req: Request, res: Response) {
 }
 
 export async function sendMessage(req: Request, res: Response) {
-  const tenant = await prisma.tenant.findUnique({ where: { id: req.params.tenantId } });
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: req.params.tenantId },
+    include: { property: { include: { managers: true } } },
+  });
   if (!tenant) throw new ApiError(404, "Locataire introuvable.");
   await assertPropertyAccess(tenant.propertyId, req.user!);
 
   const conversation = await getOrCreateConversation(tenant.id);
   const message = await createMessage(conversation.id, req.user!.userId, req.user!.role, req.body.body ?? "");
+
+  // Notification Push
+  const senderRole = req.user!.role;
+  const senderName = req.user!.name || "HaBiTa";
+
+  if (senderRole === "TENANT") {
+    // Si le locataire écrit, on notifie le propriétaire et les gestionnaires
+    const ownerId = tenant.property.ownerId;
+    const managersIds = tenant.property.managers.map(m => m.managerId);
+    const recipients = Array.from(new Set([ownerId, ...managersIds]));
+
+    for (const recipientId of recipients) {
+      sendPushNotification(recipientId, {
+        title: `Nouveau message de ${tenant.firstName} ${tenant.lastName}`,
+        body: message.body,
+        url: `/messages`,
+      }).catch(console.error);
+    }
+  } else {
+    // Si le propriétaire/gestionnaire écrit, on notifie le locataire
+    if (tenant.userId) {
+      sendPushNotification(tenant.userId, {
+        title: `Nouveau message de ${senderName}`,
+        body: message.body,
+        url: `/mon-espace/messages`,
+      }).catch(console.error);
+    }
+  }
+
   res.status(201).json(message);
 }

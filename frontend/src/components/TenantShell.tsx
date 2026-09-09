@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
+import { subscribeToPushNotifications } from "@/lib/push";
 import { ConfirmModal } from "@/components/ConfirmModal";
 
 export function TenantShell({ children }: { children: ReactNode }) {
@@ -15,6 +16,11 @@ export function TenantShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!loading && !user) router.replace("/login");
     else if (!loading && user && user.role !== "TENANT") router.replace("/dashboard");
+
+    // Activer les notifications push pour le locataire
+    if (!loading && user && user.role === "TENANT") {
+      subscribeToPushNotifications();
+    }
   }, [loading, user, router]);
 
   if (loading || !user) {

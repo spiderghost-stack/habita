@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
+import { subscribeToPushNotifications } from "@/lib/push";
 import { ConfirmModal } from "@/components/ConfirmModal";
 
 const BASE_NAV = [
@@ -46,6 +47,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!loading && !user) router.replace("/login");
     else if (!loading && user && user.role === "TENANT") router.replace("/mon-espace");
+    
+    // Demander/Activer les notifications push si l'utilisateur est connecté
+    if (!loading && user && user.role !== "TENANT") {
+      subscribeToPushNotifications();
+    }
   }, [loading, user, router]);
 
   if (loading || !user || user.role === "TENANT") {
