@@ -57,7 +57,8 @@ export async function sendMessage(req: Request, res: Response) {
 
   // Notification Push
   const senderRole = req.user!.role;
-  const senderName = req.user!.name || "HaBiTa";
+  const senderUser = await prisma.user.findUnique({ where: { id: req.user!.userId } });
+  const senderName = senderUser?.name || "HaBiTa";
 
   if (senderRole === "TENANT") {
     // Si le locataire écrit, on notifie le propriétaire et les gestionnaires
