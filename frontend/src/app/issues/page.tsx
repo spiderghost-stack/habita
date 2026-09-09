@@ -68,6 +68,7 @@ function IssueCard({ issue, onChanged }: { issue: Issue; onChanged: () => void }
     setSubmitting(true);
     try {
       await api.patch(`/issues/${issue.id}`, { status, response: response || undefined, assignedProvider: assignedProvider || undefined });
+      setExpanded(false); // Fermer le formulaire après sauvegarde
       onChanged();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Impossible de mettre à jour ce signalement.");

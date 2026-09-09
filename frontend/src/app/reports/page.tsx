@@ -61,12 +61,19 @@ export default function ReportsPage() {
   async function handleSend() {
     setSending(true);
     setSentTo(null);
+    setError(null);
     try {
       const result = await api.post<{ sent: boolean; to: string }>(`/reports/monthly/send?${query()}`);
-      setSentTo(result.sent ? result.to : null);
-      if (!result.sent) setError("SMTP non configuré côté serveur — le rapport n'a pas pu être envoyé (voir MANUAL_STEPS.md).");
+      if (result.sent) {
+        setSentTo(result.to);
+      } else {
+        setError(
+          "⚠️ L'email n'a pas pu être envoyé : le serveur SMTP n'est pas configuré. " +
+          "Veuillez ajouter les variables SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS et MAIL_FROM dans les paramètres de votre service sur Render."
+        );
+      }
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Envoi impossible.");
+      setError(err instanceof ApiError ? err.message : "Envoi impossible. Veuillez réessayer.");
     } finally {
       setSending(false);
     }
