@@ -1,0 +1,77 @@
+services:
+  - type: web
+    name: habita-api
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install && npm run build && npx prisma migrate deploy
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: habita-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: FRONTEND_URL
+        value: https://habita-app.onrender.com
+      - key: CRON_SECRET
+        generateValue: true
+      # Fournisseur SMTP à renseigner manuellement après création du service
+      # (voir MANUAL_STEPS.md) — sans ces trois valeurs, les rappels sont
+      # journalisés au lieu d'être envoyés.
+      - key: SMTP_HOST
+        value: ""
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        value: ""
+      - key: SMTP_PASS
+        value: ""
+      - key: MAIL_FROM
+        value: "HaBiTa <no-reply@habita.app>"
+      # Upload de photos (signalements) — voir guide.md pour créer le compte
+      - key: CLOUDINARY_CLOUD_NAME
+        value: ""
+      - key: CLOUDINARY_API_KEY
+        value: ""
+      - key: CLOUDINARY_API_SECRET
+        value: ""
+
+  - type: cron
+    name: habita-rappels-quotidiens
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    # Le cron n'a pas de session — il appelle l'API en HTTPS avec le secret
+    # partagé plutôt que d'exécuter le code de rappels directement, pour ne
+    # pas dupliquer la connexion à la base de données dans un second service.
+    schedule: "0 7 * * *" # 07h00 UTC chaque jour — ajuster au fuseau horaire visé
+    startCommand: >
+      curl -s -X POST https://habita-api.onrender.com/api/v1/notifications/run-global
+      -H "x-cron-secret: $CRON_SECRET"
+    envVars:
+      - key: CRON_SECRET
+        sync: false # renseigner manuellement la même valeur que sur habita-api
+
+  - type: web
+    name: habita-app
+    runtime: node
+    plan: free
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        value: https://habita-api.onrender.com/api/v1
+
+databases:
+  - name: habita-db
+    plan: free
+    databaseName: habita
+    user: habita

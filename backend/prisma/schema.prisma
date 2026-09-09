@@ -1,0 +1,303 @@
+// Schéma HaBiTa — Phase 1 (MVP)
+// Couvre : auth, propriétaires, propriétés, unités, locataires, loyers, paiements manuels, échéances.
+// Les contrats, dépenses, signalements, messagerie, score de gestion, multi-propriétaires
+// arrivent en phases 2/3 (voir ROADMAP.md) — le schéma est pensé pour les accueillir sans casser
+// ce qui existe déjà (mêmes conventions de nommage, mêmes clés étrangères).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  OWNER
+  MANAGER
+  ADMIN
+  TENANT
+}
+
+enum PropertyStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum UnitStatus {
+  AVAILABLE
+  OCCUPIED
+  MAINTENANCE
+}
+
+enum TenantStatus {
+  UP_TO_DATE
+  DUE_SOON
+  LATE
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  MOBILE_MONEY
+  CHECK
+  OTHER
+}
+
+enum Plan {
+  FREE
+  STARTER
+  PRO
+  BUSINESS
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(OWNER)
+  plan         Plan     @default(FREE)
+  phone        String?
+  emailVerifiedAt DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  properties   Property[] @relation("OwnerProperties")
+  payments     Payment[]  @relation("RecordedPayments")
+  expenses     Expense[]  @relation("RecordedExpenses")
+  contracts    Contract[] @relation("RecordedContracts")
+  tenantProfile Tenant?   @relation("TenantAccount")
+  managedProperties PropertyManager[] @relation("ManagerAssignments")
+  sentMessages Message[] @relation("SentMessages")
+
+  @@map("users")
+}
+
+model Property {
+  id              String         @id @default(cuid())
+  ownerId         String
+  owner           User           @relation("OwnerProperties", fields: [ownerId], references: [id], onDelete: Cascade)
+  name            String
+  address         String
+  description     String?
+  potentialIncome Decimal?       @db.Decimal(14, 2)
+  status          PropertyStatus @default(ACTIVE)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  units           Unit[]
+  tenants         Tenant[]
+  payments        Payment[]
+  expenses        Expense[]
+  contracts       Contract[]
+  managers        PropertyManager[]
+  issues          Issue[]
+
+  @@index([ownerId])
+  @@map("properties")
+}
+
+// Table de liaison plutôt qu'un lien direct : un gestionnaire peut être
+// assigné à des propriétés appartenant à plusieurs propriétaires différents
+// (le cas d'usage central de la section 19 du cahier des charges), et une
+// propriété pourrait un jour avoir plusieurs gestionnaires.
+model PropertyManager {
+  id          String   @id @default(cuid())
+  propertyId  String
+  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  managerId   String
+  manager     User     @relation("ManagerAssignments", fields: [managerId], references: [id], onDelete: Cascade)
+  assignedAt  DateTime @default(now())
+
+  @@unique([propertyId, managerId])
+  @@index([managerId])
+  @@map("property_managers")
+}
+
+model Unit {
+  id             String     @id @default(cuid())
+  propertyId     String
+  property       Property   @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  identifier     String     // ex: "Appartement A", "Chambre 2"
+  type           String?    // ex: studio, appartement, chambre
+  rentAmount     Decimal    @db.Decimal(14, 2)
+  status         UnitStatus @default(AVAILABLE)
+  occupiedSince  DateTime?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  tenant         Tenant?
+
+  @@index([propertyId])
+  @@map("units")
+}
+
+model Tenant {
+  id            String       @id @default(cuid())
+  propertyId    String
+  property      Property     @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  unitId        String?      @unique
+  unit          Unit?        @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  firstName     String
+  lastName      String
+  phone         String
+  email         String?
+  rentAmount    Decimal      @db.Decimal(14, 2)
+  dueDay        Int          @default(5) // jour du mois où le loyer est dû (1-28)
+  status        TenantStatus @default(UP_TO_DATE)
+  active        Boolean      @default(true)
+  userId        String?      @unique
+  user          User?        @relation("TenantAccount", fields: [userId], references: [id], onDelete: SetNull)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  payments      Payment[]
+  contracts     Contract[]
+  issues        Issue[]
+  conversation  Conversation?
+
+  @@index([propertyId])
+  @@map("tenants")
+}
+
+model Payment {
+  id             String        @id @default(cuid())
+  tenantId       String
+  tenant         Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  propertyId     String
+  property       Property      @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  amount         Decimal       @db.Decimal(14, 2)
+  period         String        // format "YYYY-MM", le mois couvert par ce paiement
+  paymentDate    DateTime      @default(now())
+  method         PaymentMethod @default(CASH)
+  comment        String?
+  receiptNumber  String        @unique
+  recordedById   String
+  recordedBy     User          @relation("RecordedPayments", fields: [recordedById], references: [id])
+  createdAt      DateTime      @default(now())
+
+  @@index([tenantId])
+  @@index([propertyId, period])
+  @@map("payments")
+}
+
+enum ContractStatus {
+  ACTIVE
+  TERMINATED
+  EXPIRED
+}
+
+model Contract {
+  id             String         @id @default(cuid())
+  propertyId     String
+  property       Property       @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  tenantId       String
+  tenant         Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  startDate      DateTime
+  endDate        DateTime
+  rentAmount     Decimal        @db.Decimal(14, 2)
+  deposit        Decimal?       @db.Decimal(14, 2)
+  conditions     String?
+  documentsNote  String?        // référence textuelle vers des documents (pas d'upload de fichier dans ce MVP)
+  status         ContractStatus @default(ACTIVE)
+  recordedById   String
+  recordedBy     User           @relation("RecordedContracts", fields: [recordedById], references: [id])
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([propertyId])
+  @@index([tenantId])
+  @@map("contracts")
+}
+
+// Table de déduplication des notifications : sans elle, relancer le job de
+// rappels (manuellement ou via un cron mal configuré) renverrait le même
+// email plusieurs fois. `subjectId` référence un Tenant ou un Contract selon
+// `type`, sans contrainte de clé étrangère — c'est un journal, pas une
+// relation métier, et il ne doit pas empêcher la suppression du sujet.
+enum IssueStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
+model Issue {
+  id                String      @id @default(cuid())
+  propertyId        String
+  property          Property    @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  tenantId          String
+  tenant            Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  category          String      // libre — plomberie, électricité, etc. Pas d'enum : évite de bloquer un locataire sur une catégorie qui n'existe pas encore
+  description       String
+  photoUrl          String?     // lien vers une photo hébergée ailleurs — pas d'upload de fichier dans ce MVP, voir MANUAL_STEPS.md
+  status            IssueStatus @default(OPEN)
+  response          String?     // réponse du propriétaire/gestionnaire, visible par le locataire
+  assignedProvider  String?     // nom/contact du prestataire attribué, texte libre
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  @@index([propertyId])
+  @@index([tenantId])
+  @@map("issues")
+}
+
+// Une conversation par locataire plutôt qu'un modèle de fils multiples :
+// le cahier des charges décrit un canal propriétaire ↔ locataire, pas une
+// messagerie généraliste façon boîte mail. Un gestionnaire assigné à la
+// propriété peut aussi écrire dans cette même conversation — pas besoin
+// d'un troisième participant distinct pour ce MVP.
+model Conversation {
+  id         String    @id @default(cuid())
+  tenantId   String    @unique
+  tenant     Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  messages   Message[]
+  updatedAt  DateTime  @updatedAt
+  createdAt  DateTime  @default(now())
+
+  @@map("conversations")
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User         @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  senderRole     Role         // copie du rôle au moment de l'envoi, pour afficher "Propriétaire" même si le rôle change plus tard
+  body           String
+  readAt         DateTime?
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+  @@map("messages")
+}
+
+model NotificationLog {
+  id        String   @id @default(cuid())
+  type      String   // "RENT_DUE_SOON" | "RENT_DUE_TODAY" | "RENT_LATE" | "CONTRACT_EXPIRING"
+  subjectId String
+  period    String   // clé de déduplication : "YYYY-MM", "YYYY-MM:day7", ou une date ISO selon le type
+  sentAt    DateTime @default(now())
+
+  @@unique([type, subjectId, period])
+  @@map("notification_logs")
+}
+
+model Expense {
+  id            String   @id @default(cuid())
+  propertyId    String
+  property      Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  label         String   // ex: "Réparation plomberie", "Électricité commune"
+  amount        Decimal  @db.Decimal(14, 2)
+  category      String?  // libre — pas d'enum : les catégories varient trop d'un propriétaire à l'autre
+  expenseDate   DateTime @default(now())
+  comment       String?
+  recordedById  String
+  recordedBy    User     @relation("RecordedExpenses", fields: [recordedById], references: [id])
+  createdAt     DateTime @default(now())
+
+  @@index([propertyId])
+  @@map("expenses")
+}
