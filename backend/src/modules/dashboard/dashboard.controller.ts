@@ -13,14 +13,18 @@ export async function summary(req: Request, res: Response) {
   });
   const propertyIds = properties.map((p) => p.id);
 
-  const [unitCount, tenants, payments, expenses] = await Promise.all([
+  const [unitCount, tenants, paymentsAgg, expensesAgg] = await Promise.all([
     prisma.unit.count({ where: { propertyId: { in: propertyIds } } }),
     prisma.tenant.findMany({
       where: { propertyId: { in: propertyIds }, active: true },
       include: { payments: { where: { period } }, unit: true },
     }),
-    prisma.payment.findMany({ where: { propertyId: { in: propertyIds }, period } }),
-    prisma.expense.findMany({
+    prisma.payment.aggregate({
+      _sum: { amount: true },
+      where: { propertyId: { in: propertyIds }, period },
+    }),
+    prisma.expense.aggregate({
+      _sum: { amount: true },
       where: {
         propertyId: { in: propertyIds },
         expenseDate: { gte: new Date(`${period}-01`), lt: nextMonth(period) },
@@ -29,9 +33,9 @@ export async function summary(req: Request, res: Response) {
   ]);
 
   const rentExpected = tenants.reduce((sum, t) => sum + Number(t.rentAmount), 0);
-  const rentCollected = payments.reduce((sum, p) => sum + Number(p.amount), 0);
+  const rentCollected = Number(paymentsAgg._sum.amount || 0);
   const rentOutstanding = Math.max(rentExpected - rentCollected, 0);
-  const totalExpenses = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
+  const totalExpenses = Number(expensesAgg._sum.amount || 0);
   const netIncome = rentCollected - totalExpenses;
 
   const tenantsWithStatus = tenants.map((t) => ({
