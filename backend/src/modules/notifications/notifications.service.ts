@@ -16,7 +16,9 @@ interface NotificationSummary {
 export async function runNotifications(propertyFilter: Record<string, unknown>): Promise<NotificationSummary> {
   const summary: NotificationSummary = { dueSoon: 0, dueToday: 0, late: 0, contractExpiring: 0, skippedNoEmail: 0 };
   const period = currentPeriod();
+  const [year, month] = period.split("-").map(Number);
   const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
   const properties = await prisma.property.findMany({ where: propertyFilter, select: { id: true } });
   const propertyIds = properties.map((p) => p.id);
@@ -36,7 +38,8 @@ export async function runNotifications(propertyFilter: Record<string, unknown>):
     const paidThisMonth = tenant.payments.reduce((sum, p) => sum + Number(p.amount), 0);
     if (paidThisMonth >= Number(tenant.rentAmount)) continue; // déjà à jour, rien à rappeler
 
-    const daysUntilDue = tenant.dueDay - today.getDate();
+    const dueDate = new Date(year, month - 1, tenant.dueDay);
+    const daysUntilDue = Math.round((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
     if (daysUntilDue === 3) {
       const sent = await trySend("RENT_DUE_SOON", tenant.id, period, {
@@ -54,21 +57,21 @@ export async function runNotifications(propertyFilter: Record<string, unknown>):
       if (sent) summary.dueToday++;
     } else if (daysUntilDue < 0) {
       const daysLate = -daysUntilDue;
-      // Rappel le premier jour de retard, puis un rappel hebdomadaire plutôt
-      // qu'un email chaque jour — un locataire en retard de 20 jours n'a pas
-      // besoin de 20 emails identiques.
-      if (daysLate === 1 || daysLate % 7 === 0) {
-        const sent = await trySend("RENT_LATE", tenant.id, `${period}:day${daysLate}`, {
-          to: tenant.email,
-          subject: "Retard de paiement de loyer",
-          html: reminderEmail(
-            tenant.firstName,
-            tenant.rentAmount,
-            `présente actuellement un retard de ${daysLate} jour${daysLate > 1 ? "s" : ""}.`
-          ),
-        });
-        if (sent) summary.late++;
-      }
+      // On regroupe par semaine de retard (semaine 0 = jours 1 à 6, semaine 1 = jours 7 à 13, etc.)
+      // Cela garantit qu'un locataire recevra toujours son premier rappel même si le script
+      // n'a pas tourné exactement au jour 1 de son retard.
+      const weeksLate = Math.floor((daysLate - 1) / 7);
+      
+      const sent = await trySend("RENT_LATE", tenant.id, `${period}:week${weeksLate}`, {
+        to: tenant.email,
+        subject: "Retard de paiement de loyer",
+        html: reminderEmail(
+          tenant.firstName,
+          tenant.rentAmount,
+          `présente actuellement un retard de ${daysLate} jour${daysLate > 1 ? "s" : ""}.`
+        ),
+      });
+      if (sent) summary.late++;
     }
   }
 

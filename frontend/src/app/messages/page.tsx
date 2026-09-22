@@ -5,6 +5,7 @@ import { AppShell } from "@/components/AppShell";
 import { api, ApiError } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
 import { ConversationSummary, Message } from "@/lib/types";
+import toast from "react-hot-toast";
 
 export default function MessagesPage() {
   const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null);
@@ -63,7 +64,6 @@ function ConversationThread({ tenantId, onSent }: { tenantId: string; onSent: ()
     refreshInterval: 5000
   });
   const [body, setBody] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -76,15 +76,15 @@ function ConversationThread({ tenantId, onSent }: { tenantId: string; onSent: ()
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!body.trim()) return;
-    setError(null);
     setSending(true);
     try {
       await api.post(`/messaging/conversations/${tenantId}/messages`, { body });
       setBody("");
       await refresh();
       onSent();
+      toast.success("Message envoyé !");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Impossible d'envoyer ce message.");
+      toast.error(err instanceof ApiError ? err.message : "Impossible d'envoyer ce message.");
     } finally {
       setSending(false);
     }
@@ -105,8 +105,6 @@ function ConversationThread({ tenantId, onSent }: { tenantId: string; onSent: ()
         ))}
         <div ref={bottomRef} />
       </div>
-
-      {error && <p className="px-4 text-xs text-red-700">{error}</p>}
 
       <form onSubmit={handleSubmit} className="flex gap-3 border-t border-petrole-100 p-4">
         <input

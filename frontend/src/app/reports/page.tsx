@@ -6,6 +6,8 @@ import { api, ApiError, downloadFile } from "@/lib/api";
 import { useApi } from "@/lib/useApi";
 import { MonthlyReport, Property } from "@/lib/types";
 import { formatFcfa, monthLabel } from "@/lib/format";
+import toast from "react-hot-toast";
+import { motion } from "framer-motion";
 
 function currentPeriod() {
   const now = new Date();
@@ -15,7 +17,6 @@ function currentPeriod() {
 export default function ReportsPage() {
   const [propertyId, setPropertyId] = useState("");
   const [period, setPeriod] = useState(currentPeriod());
-  const [localError, setLocalError] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
   const [sending, setSending] = useState(false);
   const [sentTo, setSentTo] = useState<string | null>(null);
@@ -28,14 +29,15 @@ export default function ReportsPage() {
   }
 
   const { data: report, error: apiError, isLoading: loading } = useApi<MonthlyReport>(`/reports/monthly?${query()}`);
-  const error = localError || (apiError ? (apiError instanceof ApiError ? apiError.message : "Impossible de charger le rapport.") : null);
+  const error = apiError ? (apiError instanceof ApiError ? apiError.message : "Impossible de charger le rapport.") : null;
 
   async function handleDownload() {
     setDownloading(true);
     try {
       await downloadFile(`/reports/monthly.csv?${query()}`, `rapport-habita-${period}.csv`);
+      toast.success("Téléchargement réussi");
     } catch (err) {
-      setLocalError(err instanceof ApiError ? err.message : "Téléchargement impossible.");
+      toast.error(err instanceof ApiError ? err.message : "Téléchargement impossible.");
     } finally {
       setDownloading(false);
     }
@@ -44,19 +46,18 @@ export default function ReportsPage() {
   async function handleSend() {
     setSending(true);
     setSentTo(null);
-    setLocalError(null);
     try {
       const result = await api.post<{ sent: boolean; to: string }>(`/reports/monthly/send?${query()}`);
       if (result.sent) {
         setSentTo(result.to);
+        toast.success(`Rapport envoyé à ${result.to}`);
       } else {
-        setLocalError(
-          "⚠️ L'email n'a pas pu être envoyé : le serveur SMTP n'est pas configuré. " +
-          "Veuillez ajouter les variables SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS et MAIL_FROM dans les paramètres de votre service sur Render."
+        toast.error(
+          "Le serveur SMTP n'est pas configuré. Veuillez vérifier les variables d'environnement."
         );
       }
     } catch (err) {
-      setLocalError(err instanceof ApiError ? err.message : "Envoi impossible. Veuillez réessayer.");
+      toast.error(err instanceof ApiError ? err.message : "Envoi impossible. Veuillez réessayer.");
     } finally {
       setSending(false);
     }
@@ -107,16 +108,23 @@ export default function ReportsPage() {
               {sending ? "Envoi…" : "M'envoyer ce rapport par email"}
             </button>
           </div>
-          {sentTo && <p className="mb-4 text-sm text-petrole-600">Rapport envoyé à {sentTo}.</p>}
-
-          <div className="mb-6 grid grid-cols-2 gap-px overflow-hidden border border-petrole-200 bg-petrole-200 sm:grid-cols-2 md:grid-cols-4">
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 grid grid-cols-2 gap-px overflow-hidden border border-petrole-200 bg-petrole-200 sm:grid-cols-2 md:grid-cols-4"
+          >
             <Stat label={`Collecté — ${monthLabel(period)}`} value={formatFcfa(report.totals.rentCollected)} />
             <Stat label="Dépenses" value={formatFcfa(report.totals.totalExpenses)} />
             <Stat label="Net" value={formatFcfa(report.totals.netIncome)} accent={report.totals.netIncome < 0 ? "or" : "petrole"} />
             <Stat label="Occupation moy." value={`${report.totals.occupancyRate}%`} />
-          </div>
+          </motion.div>
 
-          <div className="overflow-x-auto border border-petrole-200 bg-white">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.1 }}
+            className="overflow-x-auto border border-petrole-200 bg-white"
+          >
             <table className="w-full text-left text-sm">
               <thead className="border-b border-petrole-200 text-xs uppercase tracking-wide text-petrole-500">
                 <tr>
@@ -152,7 +160,7 @@ export default function ReportsPage() {
                 )}
               </tbody>
             </table>
-          </div>
+          </motion.div>
         </>
       )}
     </AppShell>

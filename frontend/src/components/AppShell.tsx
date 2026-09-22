@@ -7,20 +7,27 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { subscribeToPushNotifications } from "@/lib/push";
 import { ConfirmModal } from "@/components/ConfirmModal";
+import { Toaster } from "react-hot-toast";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  LayoutDashboard, Building, Users, CreditCard, 
+  Receipt, FileText, AlertTriangle, MessageSquare, 
+  PieChart, Settings, X, Menu
+} from "lucide-react";
 
 const BASE_NAV = [
-  { href: "/dashboard", label: "Tableau de bord" },
-  { href: "/properties", label: "Propriétés" },
-  { href: "/tenants", label: "Locataires" },
-  { href: "/payments", label: "Paiements" },
-  { href: "/expenses", label: "Dépenses" },
-  { href: "/contracts", label: "Contrats" },
-  { href: "/issues", label: "Signalements" },
-  { href: "/messages", label: "Messages" },
-  { href: "/reports", label: "Rapports" },
+  { href: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
+  { href: "/properties", label: "Propriétés", icon: Building },
+  { href: "/tenants", label: "Locataires", icon: Users },
+  { href: "/payments", label: "Paiements", icon: CreditCard },
+  { href: "/expenses", label: "Dépenses", icon: Receipt },
+  { href: "/contracts", label: "Contrats", icon: FileText },
+  { href: "/issues", label: "Signalements", icon: AlertTriangle },
+  { href: "/messages", label: "Messages", icon: MessageSquare },
+  { href: "/reports", label: "Rapports", icon: PieChart },
 ];
 
-const ADMIN_NAV = [{ href: "/admin", label: "Administration" }];
+const ADMIN_NAV = [{ href: "/admin", label: "Administration", icon: Settings }];
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { user, loading, logout } = useAuth();
@@ -80,12 +87,13 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Link
               key={item.href}
               href={item.href}
-              className={`mb-0.5 flex items-center rounded px-3 py-2.5 text-sm font-medium transition-colors ${
+              className={`mb-0.5 flex items-center gap-3 rounded px-3 py-2.5 text-sm font-medium transition-colors ${
                 active
                   ? "bg-petrole-700 text-white"
                   : "text-petrole-200 hover:bg-petrole-700/60 hover:text-white"
               }`}
             >
+              <item.icon className="h-5 w-5" />
               {item.label}
             </Link>
           );
@@ -130,38 +138,41 @@ export function AppShell({ children }: { children: ReactNode }) {
       </aside>
 
       {/* ── Overlay mobile ── */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-          aria-hidden="true"
-        />
-      )}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+            aria-hidden="true"
+          />
+        )}
+      </AnimatePresence>
 
       {/* ── Sidebar drawer mobile ── */}
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-petrole-800 text-petrole-50 transition-transform duration-300 ease-in-out lg:hidden ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        {/* Bouton fermer */}
-        <button
-          onClick={() => setSidebarOpen(false)}
-          className="absolute right-4 top-5 text-petrole-200 hover:text-white"
-          aria-label="Fermer le menu"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
+      <AnimatePresence>
+        {sidebarOpen && (
+          <motion.aside
+            initial={{ x: "-100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "-100%" }}
+            transition={{ type: "spring", bounce: 0, duration: 0.3 }}
+            className="fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-petrole-800 text-petrole-50 lg:hidden"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-        <SidebarContent />
-      </aside>
+            {/* Bouton fermer */}
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="absolute right-4 top-5 text-petrole-200 hover:text-white"
+              aria-label="Fermer le menu"
+            >
+              <X className="h-6 w-6" />
+            </button>
+            <SidebarContent />
+          </motion.aside>
+        )}
+      </AnimatePresence>
 
       {/* ── Contenu principal ── */}
       <div className="flex min-w-0 flex-1 flex-col">
@@ -176,20 +187,13 @@ export function AppShell({ children }: { children: ReactNode }) {
             className="rounded p-2 text-petrole-700 hover:bg-petrole-50"
             aria-label="Ouvrir le menu"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
+            <Menu className="h-6 w-6" />
           </button>
         </header>
 
         {/* Contenu de la page */}
         <div className="flex-1 overflow-y-auto">
+          <Toaster position="bottom-center" toastOptions={{ duration: 4000 }} />
           <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
             {children}
           </div>
