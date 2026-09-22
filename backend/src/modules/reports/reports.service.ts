@@ -30,9 +30,9 @@ export async function buildMonthlyReport(propertyIds: string[], period: string):
     const [property, units, tenants, payments, expenses, newTenants] = await Promise.all([
       prisma.property.findUnique({ where: { id: propertyId }, select: { name: true } }),
       prisma.unit.count({ where: { propertyId } }),
-      prisma.tenant.findMany({ where: { propertyId, active: true }, include: { payments: { where: { period } } } }),
-      prisma.payment.findMany({ where: { propertyId, period } }),
-      prisma.expense.findMany({ where: { propertyId, expenseDate: { gte: periodStart, lt: periodEnd } } }),
+      prisma.tenant.findMany({ where: { propertyId, active: true }, select: { unitId: true, rentAmount: true } }),
+      prisma.payment.findMany({ where: { propertyId, period }, select: { amount: true } }),
+      prisma.expense.findMany({ where: { propertyId, expenseDate: { gte: periodStart, lt: periodEnd } }, select: { amount: true } }),
       prisma.tenant.count({ where: { propertyId, createdAt: { gte: periodStart, lt: periodEnd } } }),
     ]);
     if (!property) continue;

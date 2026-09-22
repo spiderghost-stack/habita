@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { api, ApiError, downloadFile } from "@/lib/api";
+import { useApi } from "@/lib/useApi";
 import { MonthlyReport, Property } from "@/lib/types";
 import { formatFcfa, monthLabel } from "@/lib/format";
 
@@ -12,47 +13,29 @@ function currentPeriod() {
 }
 
 export default function ReportsPage() {
-  const [properties, setProperties] = useState<Property[]>([]);
   const [propertyId, setPropertyId] = useState("");
   const [period, setPeriod] = useState(currentPeriod());
-  const [report, setReport] = useState<MonthlyReport | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [localError, setLocalError] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
   const [sending, setSending] = useState(false);
   const [sentTo, setSentTo] = useState<string | null>(null);
 
-  useEffect(() => {
-    api.get<Property[]>("/properties").then(setProperties);
-  }, []);
-
+  const { data: properties = [] } = useApi<Property[]>("/properties");
   function query() {
     const params = new URLSearchParams({ period });
     if (propertyId) params.set("propertyId", propertyId);
     return params.toString();
   }
 
-  function refresh() {
-    setLoading(true);
-    setError(null);
-    return api
-      .get<MonthlyReport>(`/reports/monthly?${query()}`)
-      .then(setReport)
-      .catch((err) => setError(err instanceof ApiError ? err.message : "Impossible de charger le rapport."))
-      .finally(() => setLoading(false));
-  }
-
-  useEffect(() => {
-    refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [propertyId, period]);
+  const { data: report, error: apiError, isLoading: loading } = useApi<MonthlyReport>(`/reports/monthly?${query()}`);
+  const error = localError || (apiError ? (apiError instanceof ApiError ? apiError.message : "Impossible de charger le rapport.") : null);
 
   async function handleDownload() {
     setDownloading(true);
     try {
       await downloadFile(`/reports/monthly.csv?${query()}`, `rapport-habita-${period}.csv`);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Téléchargement impossible.");
+      setLocalError(err instanceof ApiError ? err.message : "Téléchargement impossible.");
     } finally {
       setDownloading(false);
     }
@@ -61,19 +44,19 @@ export default function ReportsPage() {
   async function handleSend() {
     setSending(true);
     setSentTo(null);
-    setError(null);
+    setLocalError(null);
     try {
       const result = await api.post<{ sent: boolean; to: string }>(`/reports/monthly/send?${query()}`);
       if (result.sent) {
         setSentTo(result.to);
       } else {
-        setError(
+        setLocalError(
           "⚠️ L'email n'a pas pu être envoyé : le serveur SMTP n'est pas configuré. " +
           "Veuillez ajouter les variables SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS et MAIL_FROM dans les paramètres de votre service sur Render."
         );
       }
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Envoi impossible. Veuillez réessayer.");
+      setLocalError(err instanceof ApiError ? err.message : "Envoi impossible. Veuillez réessayer.");
     } finally {
       setSending(false);
     }

@@ -3,22 +3,16 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { api, ApiError } from "@/lib/api";
+import { useApi } from "@/lib/useApi";
 import { ConversationSummary, Message } from "@/lib/types";
 
 export default function MessagesPage() {
-  const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  function refreshConversations() {
-    return api.get<ConversationSummary[]>("/messaging/conversations").then(setConversations);
-  }
+  const { data: conversations = [], isLoading: loading, mutate: refreshConversations } = useApi<ConversationSummary[]>("/messaging/conversations", {
+    refreshInterval: 8000
+  });
 
-  useEffect(() => {
-    refreshConversations().finally(() => setLoading(false));
-    const interval = setInterval(refreshConversations, 8000);
-    return () => clearInterval(interval);
-  }, []);
 
   return (
     <AppShell>
@@ -65,22 +59,15 @@ export default function MessagesPage() {
 }
 
 function ConversationThread({ tenantId, onSent }: { tenantId: string; onSent: () => void }) {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const { data: messages = [], mutate: refresh } = useApi<Message[]>(`/messaging/conversations/${tenantId}/messages`, {
+    refreshInterval: 5000
+  });
   const [body, setBody] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  function refresh() {
-    return api.get<Message[]>(`/messaging/conversations/${tenantId}/messages`).then(setMessages);
-  }
 
-  useEffect(() => {
-    refresh();
-    const interval = setInterval(refresh, 5000);
-    return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tenantId]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
