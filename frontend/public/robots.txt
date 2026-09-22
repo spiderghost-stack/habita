@@ -1,0 +1,25 @@
+User-agent: *
+# Pages publiques autorisées à l'exploration
+Allow: /login
+Allow: /register
+
+# Toutes les pages privées (authentification requise)
+Disallow: /dashboard
+Disallow: /properties
+Disallow: /tenants
+Disallow: /payments
+Disallow: /expenses
+Disallow: /contracts
+Disallow: /issues
+Disallow: /messages
+Disallow: /reports
+Disallow: /profile
+Disallow: /admin
+Disallow: /mon-espace
+
+# Ressources Next.js nécessaires au rendu (ne pas bloquer)
+Allow: /_next/static/
+Allow: /_next/image/
+
+# Sitemap
+Sitemap: https://habita-app.onrender.com/sitemap.xml
