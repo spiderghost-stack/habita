@@ -165,5 +165,5 @@ export interface DashboardSummary {
   totalExpenses: number;
   netIncome: number;
   lateCount: number;
-  lateTenants: Array<{ id: string; name: string; unit: string | null; rentAmount: number; dueDay: number }>;
+  lateTenants: Array<{ id: string; name: string; phone: string; unit: string | null; rentAmount: number; dueDay: number }>;
 }

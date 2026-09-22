@@ -67,7 +67,15 @@ export default function TenantDetailPage() {
         </div>
         <div className="flex items-center gap-4">
           <StatusBadge status={tenant.status} />
-          <div className="flex gap-3 text-sm">
+          <div className="flex items-center gap-3 text-sm">
+            <a
+              href={`https://wa.me/${tenant.phone.replace(/[^0-9]/g, "")}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-green-600 underline font-medium"
+            >
+              WhatsApp
+            </a>
             <button onClick={() => setShowEditForm((s) => !s)} className="text-or-600 underline">
               {showEditForm ? "Annuler" : "Modifier"}
             </button>

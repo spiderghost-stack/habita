@@ -3,26 +3,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/AppShell";
-import { api, ApiError } from "@/lib/api";
+import { api } from "@/lib/api";
 import { DashboardSummary } from "@/lib/types";
 import { formatFcfa, monthLabel } from "@/lib/format";
-import toast from "react-hot-toast";
-
-interface NotificationSummary {
-  dueSoon: number;
-  dueToday: number;
-  late: number;
-  contractExpiring: number;
-  skippedNoEmail: number;
-  errors: string[];
-}
+import { MessageCircle } from "lucide-react";
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [notifResult, setNotifResult] = useState<NotificationSummary | null>(null);
-  const [notifError, setNotifError] = useState<string | null>(null);
-  const [sending, setSending] = useState(false);
 
   useEffect(() => {
     api
@@ -31,26 +19,6 @@ export default function DashboardPage() {
       .catch(() => setError("Impossible de charger le tableau de bord."));
   }, []);
 
-  async function handleSendReminders() {
-    setSending(true);
-    setNotifError(null);
-    setNotifResult(null);
-    try {
-      const result = await api.post<NotificationSummary>("/notifications/run-mine");
-      setNotifResult(result);
-      if (result.errors && result.errors.length > 0) {
-        toast.error(`Certains envois ont échoué. Voir les détails ci-dessous.`, { duration: 6000 });
-      } else {
-        toast.success("Opération terminée !");
-      }
-    } catch (err) {
-      const msg = err instanceof ApiError ? err.message : "Impossible d'envoyer les rappels.";
-      setNotifError(msg);
-      toast.error(msg);
-    } finally {
-      setSending(false);
-    }
-  }
 
   return (
     <AppShell>
@@ -87,50 +55,6 @@ export default function DashboardPage() {
             />
           </div>
 
-          <div className="mb-6 border border-petrole-200 bg-white p-4 sm:p-5">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="font-display text-base font-bold text-petrole-800 sm:text-lg">Rappels de loyer</h2>
-                <p className="text-sm text-petrole-500">
-                  Envoie par email les rappels d'échéance et de retard aux locataires (une seule fois par échéance).
-                </p>
-              </div>
-              <button
-                onClick={handleSendReminders}
-                disabled={sending}
-                className="w-full shrink-0 bg-petrole-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-petrole-800 disabled:opacity-60 sm:w-auto"
-              >
-                {sending ? "Envoi…" : "Envoyer les rappels"}
-              </button>
-            </div>
-            {notifError && <p className="mt-3 text-sm text-red-700">{notifError}</p>}
-            {notifResult && (
-              <div className="mt-4 rounded border border-petrole-200 bg-petrole-50 p-3 text-sm text-petrole-800">
-                <p className="font-semibold mb-1">Résumé de l'opération :</p>
-                <ul className="list-disc pl-5 mb-2 space-y-1">
-                  <li>{notifResult.dueSoon} rappel(s) d'échéance proche</li>
-                  <li>{notifResult.dueToday} rappel(s) pour échéance du jour</li>
-                  <li>{notifResult.late} rappel(s) de retard</li>
-                  <li>{notifResult.contractExpiring} rappel(s) de fin de contrat</li>
-                </ul>
-                {notifResult.skippedNoEmail > 0 && (
-                  <p className="text-or-600 font-medium">
-                    ⚠️ {notifResult.skippedNoEmail} locataire(s) ignoré(s) (pas d'adresse email).
-                  </p>
-                )}
-                {notifResult.errors && notifResult.errors.length > 0 && (
-                  <div className="mt-3 border-t border-petrole-200 pt-2 text-red-700">
-                    <p className="font-medium mb-1">Erreurs rencontrées :</p>
-                    <ul className="list-disc pl-5 space-y-1 text-xs">
-                      {notifResult.errors.map((err, idx) => (
-                        <li key={idx}>{err}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
 
           <section>
             <h2 className="mb-3 font-display text-base font-bold text-petrole-800 sm:text-lg">Locataires en retard</h2>
@@ -140,19 +64,36 @@ export default function DashboardPage() {
               </p>
             ) : (
               <div className="border border-petrole-200 bg-white">
-                {data.lateTenants.map((t) => (
-                  <Link
-                    key={t.id}
-                    href={`/tenants/${t.id}`}
-                    className="flex items-center justify-between border-b border-petrole-100 px-4 py-3 text-sm last:border-b-0 hover:bg-fond"
-                  >
-                    <div>
-                      <p className="text-petrole-800">{t.name}</p>
-                      <p className="text-xs text-petrole-500">{t.unit ?? "Unité non assignée"} · échéance le {t.dueDay}</p>
+                {data.lateTenants.map((t) => {
+                  const messageText = encodeURIComponent(
+                    `Bonjour ${t.name}, sauf erreur de notre part, votre loyer de ${formatFcfa(t.rentAmount)} pour ce mois est actuellement en retard. Pourriez-vous régulariser la situation ? Merci.`
+                  );
+                  const cleanPhone = t.phone.replace(/[^0-9]/g, "");
+
+                  return (
+                    <div
+                      key={t.id}
+                      className="flex items-center justify-between border-b border-petrole-100 px-4 py-3 text-sm last:border-b-0 hover:bg-fond"
+                    >
+                      <Link href={`/tenants/${t.id}`} className="flex-1">
+                        <p className="text-petrole-800">{t.name}</p>
+                        <p className="text-xs text-petrole-500">{t.unit ?? "Unité non assignée"} · échéance le {t.dueDay}</p>
+                      </Link>
+                      <div className="flex items-center gap-4">
+                        <span className="text-or-600 font-medium">{formatFcfa(t.rentAmount)}</span>
+                        <a
+                          href={`https://wa.me/${cleanPhone}?text=${messageText}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex h-8 items-center gap-2 rounded bg-green-50 px-3 text-xs font-semibold text-green-700 transition-colors hover:bg-green-100"
+                        >
+                          <MessageCircle className="h-4 w-4" />
+                          <span className="hidden sm:inline">Relancer</span>
+                        </a>
+                      </div>
                     </div>
-                    <span className="text-or-600">{formatFcfa(t.rentAmount)}</span>
-                  </Link>
-                ))}
+                  );
+                })}
               </div>
             )}
           </section>

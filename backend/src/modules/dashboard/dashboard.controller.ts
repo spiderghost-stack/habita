@@ -56,6 +56,7 @@ export async function summary(req: Request, res: Response) {
     lateTenants: lateTenants.map((t) => ({
       id: t.id,
       name: `${t.firstName} ${t.lastName}`,
+      phone: t.phone,
       unit: t.unit?.identifier ?? null,
       rentAmount: Number(t.rentAmount),
       dueDay: t.dueDay,
