@@ -8,13 +8,14 @@ interface NotificationSummary {
   late: number;
   contractExpiring: number;
   skippedNoEmail: number;
+  errors: string[];
 }
 
 // Une seule fonction, appelée à la fois par le job cron global (toutes les
 // propriétés) et par le déclenchement manuel d'un propriétaire (ses
 // propriétés uniquement) — voir notifications.controller.ts.
 export async function runNotifications(propertyFilter: Record<string, unknown>): Promise<NotificationSummary> {
-  const summary: NotificationSummary = { dueSoon: 0, dueToday: 0, late: 0, contractExpiring: 0, skippedNoEmail: 0 };
+  const summary: NotificationSummary = { dueSoon: 0, dueToday: 0, late: 0, contractExpiring: 0, skippedNoEmail: 0, errors: [] };
   const period = currentPeriod();
   const [year, month] = period.split("-").map(Number);
   const today = new Date();
@@ -30,48 +31,53 @@ export async function runNotifications(propertyFilter: Record<string, unknown>):
   });
 
   for (const tenant of tenants) {
-    if (!tenant.email) {
-      summary.skippedNoEmail++;
-      continue;
-    }
+    try {
+      if (!tenant.email) {
+        summary.skippedNoEmail++;
+        continue;
+      }
 
-    const paidThisMonth = tenant.payments.reduce((sum, p) => sum + Number(p.amount), 0);
-    if (paidThisMonth >= Number(tenant.rentAmount)) continue; // déjà à jour, rien à rappeler
+      const paidThisMonth = tenant.payments.reduce((sum, p) => sum + Number(p.amount), 0);
+      if (paidThisMonth >= Number(tenant.rentAmount)) continue; // déjà à jour, rien à rappeler
 
-    const dueDate = new Date(year, month - 1, tenant.dueDay);
-    const daysUntilDue = Math.round((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      const dueDate = new Date(year, month - 1, tenant.dueDay);
+      const daysUntilDue = Math.round((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
-    if (daysUntilDue === 3) {
-      const sent = await trySend("RENT_DUE_SOON", tenant.id, period, {
-        to: tenant.email,
-        subject: "Votre loyer arrive bientôt à échéance",
-        html: reminderEmail(tenant.firstName, tenant.rentAmount, "arrive à échéance dans 3 jours."),
-      });
-      if (sent) summary.dueSoon++;
-    } else if (daysUntilDue === 0) {
-      const sent = await trySend("RENT_DUE_TODAY", tenant.id, period, {
-        to: tenant.email,
-        subject: "Votre loyer est dû aujourd'hui",
-        html: reminderEmail(tenant.firstName, tenant.rentAmount, "est dû aujourd'hui."),
-      });
-      if (sent) summary.dueToday++;
-    } else if (daysUntilDue < 0) {
-      const daysLate = -daysUntilDue;
-      // On regroupe par semaine de retard (semaine 0 = jours 1 à 6, semaine 1 = jours 7 à 13, etc.)
-      // Cela garantit qu'un locataire recevra toujours son premier rappel même si le script
-      // n'a pas tourné exactement au jour 1 de son retard.
-      const weeksLate = Math.floor((daysLate - 1) / 7);
-      
-      const sent = await trySend("RENT_LATE", tenant.id, `${period}:week${weeksLate}`, {
-        to: tenant.email,
-        subject: "Retard de paiement de loyer",
-        html: reminderEmail(
-          tenant.firstName,
-          tenant.rentAmount,
-          `présente actuellement un retard de ${daysLate} jour${daysLate > 1 ? "s" : ""}.`
-        ),
-      });
-      if (sent) summary.late++;
+      if (daysUntilDue === 3) {
+        const sent = await trySend("RENT_DUE_SOON", tenant.id, period, {
+          to: tenant.email,
+          subject: "Votre loyer arrive bientôt à échéance",
+          html: reminderEmail(tenant.firstName, tenant.rentAmount, "arrive à échéance dans 3 jours."),
+        });
+        if (sent) summary.dueSoon++;
+      } else if (daysUntilDue === 0) {
+        const sent = await trySend("RENT_DUE_TODAY", tenant.id, period, {
+          to: tenant.email,
+          subject: "Votre loyer est dû aujourd'hui",
+          html: reminderEmail(tenant.firstName, tenant.rentAmount, "est dû aujourd'hui."),
+        });
+        if (sent) summary.dueToday++;
+      } else if (daysUntilDue < 0) {
+        const daysLate = -daysUntilDue;
+        // On regroupe par semaine de retard (semaine 0 = jours 1 à 6, semaine 1 = jours 7 à 13, etc.)
+        // Cela garantit qu'un locataire recevra toujours son premier rappel même si le script
+        // n'a pas tourné exactement au jour 1 de son retard.
+        const weeksLate = Math.floor((daysLate - 1) / 7);
+        
+        const sent = await trySend("RENT_LATE", tenant.id, `${period}:week${weeksLate}`, {
+          to: tenant.email,
+          subject: "Retard de paiement de loyer",
+          html: reminderEmail(
+            tenant.firstName,
+            tenant.rentAmount,
+            `présente actuellement un retard de ${daysLate} jour${daysLate > 1 ? "s" : ""}.`
+          ),
+        });
+        if (sent) summary.late++;
+      }
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      summary.errors.push(`Locataire ${tenant.id} (${tenant.firstName} ${tenant.lastName}) : ${msg}`);
     }
   }
 
@@ -81,17 +87,22 @@ export async function runNotifications(propertyFilter: Record<string, unknown>):
   });
 
   for (const contract of expiringContracts) {
-    if (!contract.tenant.email) continue;
-    const daysUntilExpiry = Math.ceil((contract.endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    if (daysUntilExpiry !== 30) continue;
+    try {
+      if (!contract.tenant.email) continue;
+      const daysUntilExpiry = Math.ceil((contract.endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      if (daysUntilExpiry !== 30) continue;
 
-    const dedupeKey = contract.endDate.toISOString().slice(0, 10);
-    const sent = await trySend("CONTRACT_EXPIRING", contract.id, dedupeKey, {
-      to: contract.tenant.email,
-      subject: "Votre contrat de location arrive à échéance",
-      html: `<p>Bonjour ${contract.tenant.firstName},</p><p>Votre contrat de location arrive à échéance le ${contract.endDate.toLocaleDateString("fr-FR")} (dans 30 jours). Contactez votre propriétaire si vous souhaitez le renouveler.</p>`,
-    });
-    if (sent) summary.contractExpiring++;
+      const dedupeKey = contract.endDate.toISOString().slice(0, 10);
+      const sent = await trySend("CONTRACT_EXPIRING", contract.id, dedupeKey, {
+        to: contract.tenant.email,
+        subject: "Votre contrat de location arrive à échéance",
+        html: `<p>Bonjour ${contract.tenant.firstName},</p><p>Votre contrat de location arrive à échéance le ${contract.endDate.toLocaleDateString("fr-FR")} (dans 30 jours). Contactez votre propriétaire si vous souhaitez le renouveler.</p>`,
+      });
+      if (sent) summary.contractExpiring++;
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      summary.errors.push(`Contrat ${contract.id} : ${msg}`);
+    }
   }
 
   return summary;

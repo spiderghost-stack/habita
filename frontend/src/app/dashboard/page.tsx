@@ -6,6 +6,7 @@ import { AppShell } from "@/components/AppShell";
 import { api, ApiError } from "@/lib/api";
 import { DashboardSummary } from "@/lib/types";
 import { formatFcfa, monthLabel } from "@/lib/format";
+import toast from "react-hot-toast";
 
 interface NotificationSummary {
   dueSoon: number;
@@ -13,6 +14,7 @@ interface NotificationSummary {
   late: number;
   contractExpiring: number;
   skippedNoEmail: number;
+  errors: string[];
 }
 
 export default function DashboardPage() {
@@ -36,8 +38,15 @@ export default function DashboardPage() {
     try {
       const result = await api.post<NotificationSummary>("/notifications/run-mine");
       setNotifResult(result);
+      if (result.errors && result.errors.length > 0) {
+        toast.error(`Certains envois ont échoué. Voir les détails ci-dessous.`, { duration: 6000 });
+      } else {
+        toast.success("Opération terminée !");
+      }
     } catch (err) {
-      setNotifError(err instanceof ApiError ? err.message : "Impossible d'envoyer les rappels.");
+      const msg = err instanceof ApiError ? err.message : "Impossible d'envoyer les rappels.";
+      setNotifError(msg);
+      toast.error(msg);
     } finally {
       setSending(false);
     }
@@ -96,11 +105,30 @@ export default function DashboardPage() {
             </div>
             {notifError && <p className="mt-3 text-sm text-red-700">{notifError}</p>}
             {notifResult && (
-              <p className="mt-3 text-sm text-petrole-600">
-                {notifResult.dueSoon + notifResult.dueToday + notifResult.late + notifResult.contractExpiring} email(s) envoyé(s)
-                {" "}({notifResult.dueSoon} échéance proche, {notifResult.dueToday} échéance du jour, {notifResult.late} retard, {notifResult.contractExpiring} contrat expirant)
-                {notifResult.skippedNoEmail > 0 && ` · ${notifResult.skippedNoEmail} locataire(s) sans email ignoré(s)`}.
-              </p>
+              <div className="mt-4 rounded border border-petrole-200 bg-petrole-50 p-3 text-sm text-petrole-800">
+                <p className="font-semibold mb-1">Résumé de l'opération :</p>
+                <ul className="list-disc pl-5 mb-2 space-y-1">
+                  <li>{notifResult.dueSoon} rappel(s) d'échéance proche</li>
+                  <li>{notifResult.dueToday} rappel(s) pour échéance du jour</li>
+                  <li>{notifResult.late} rappel(s) de retard</li>
+                  <li>{notifResult.contractExpiring} rappel(s) de fin de contrat</li>
+                </ul>
+                {notifResult.skippedNoEmail > 0 && (
+                  <p className="text-or-600 font-medium">
+                    ⚠️ {notifResult.skippedNoEmail} locataire(s) ignoré(s) (pas d'adresse email).
+                  </p>
+                )}
+                {notifResult.errors && notifResult.errors.length > 0 && (
+                  <div className="mt-3 border-t border-petrole-200 pt-2 text-red-700">
+                    <p className="font-medium mb-1">Erreurs rencontrées :</p>
+                    <ul className="list-disc pl-5 space-y-1 text-xs">
+                      {notifResult.errors.map((err, idx) => (
+                        <li key={idx}>{err}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
             )}
           </div>
 
