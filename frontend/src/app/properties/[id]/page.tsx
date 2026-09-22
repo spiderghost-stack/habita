@@ -6,6 +6,7 @@ import Link from "next/link";
 import { AppShell } from "@/components/AppShell";
 import { ConfirmModal } from "@/components/ConfirmModal";
 import { StatusBadge } from "@/components/StatusBadge";
+import { ErrorAlert } from "@/components/ErrorAlert";
 import { useAuth } from "@/lib/auth";
 import { api, ApiError } from "@/lib/api";
 import { Property, Unit, ManagementScore } from "@/lib/types";
@@ -175,7 +176,7 @@ function ManagersSection({ property, onChanged }: { property: Property; onChange
   const [showForm, setShowForm] = useState(false);
   const [email, setEmail] = useState("");
   const [credentials, setCredentials] = useState<{ email: string; temporaryPassword?: string } | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Error | string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
 
@@ -192,7 +193,7 @@ function ManagersSection({ property, onChanged }: { property: Property; onChange
       setEmail("");
       onChanged();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Impossible d'assigner ce gestionnaire.");
+      setError(err instanceof Error ? err : "Impossible d'assigner ce gestionnaire.");
     } finally {
       setSubmitting(false);
     }
@@ -252,7 +253,9 @@ function ManagersSection({ property, onChanged }: { property: Property; onChange
         </form>
       )}
 
-      {error && <p className="mt-3 border-l-2 border-or-400 bg-or-50 px-3 py-2 text-sm">{error}</p>}
+      <div className="mt-3">
+        <ErrorAlert error={error} />
+      </div>
 
       {credentials && (
         <div className="mt-3 border-l-2 border-petrole-500 bg-petrole-50 px-4 py-3 text-sm">
@@ -444,7 +447,7 @@ function UnitForm({ propertyId, onCreated }: { propertyId: string; onCreated: ()
   const [identifier, setIdentifier] = useState("");
   const [type, setType] = useState("");
   const [rentAmount, setRentAmount] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Error | string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
@@ -455,7 +458,7 @@ function UnitForm({ propertyId, onCreated }: { propertyId: string; onCreated: ()
       await api.post("/units", { propertyId, identifier, type: type || undefined, rentAmount: Number(rentAmount) });
       onCreated();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Impossible d'ajouter l'unité.");
+      setError(err instanceof Error ? err : "Impossible d'ajouter l'unité.");
     } finally {
       setSubmitting(false);
     }
@@ -463,7 +466,7 @@ function UnitForm({ propertyId, onCreated }: { propertyId: string; onCreated: ()
 
   return (
     <form onSubmit={handleSubmit} className="mb-4 border border-petrole-200 bg-white p-4">
-      {error && <p className="mb-3 border-l-2 border-or-400 bg-or-50 px-3 py-2 text-sm">{error}</p>}
+      <ErrorAlert error={error} />
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <input
           required
@@ -527,22 +530,22 @@ function Field({
 
 function ScoreSection({ propertyId }: { propertyId: string }) {
   const [score, setScore] = useState<ManagementScore | null>(null);
-  const [locked, setLocked] = useState<string | null>(null);
+  const [lockedError, setLockedError] = useState<Error | null>(null);
 
   useEffect(() => {
     api
       .get<ManagementScore>(`/score/${propertyId}`)
       .then(setScore)
       .catch((err) => {
-        if (err instanceof ApiError && err.status === 402) setLocked(err.message);
+        if (err instanceof ApiError && err.status === 402) setLockedError(err);
       });
   }, [propertyId]);
 
-  if (locked) {
+  if (lockedError) {
     return (
       <div className="mb-6 border border-petrole-200 bg-white p-5">
         <h2 className="mb-1 font-display text-lg font-bold text-petrole-800">Score de gestion</h2>
-        <p className="text-sm text-petrole-500">{locked}</p>
+        <ErrorAlert error={lockedError} />
       </div>
     );
   }

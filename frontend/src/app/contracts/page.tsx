@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { ConfirmModal } from "@/components/ConfirmModal";
+import { ErrorAlert } from "@/components/ErrorAlert";
 import { api, ApiError } from "@/lib/api";
 import { Contract, Tenant } from "@/lib/types";
 import { formatFcfa } from "@/lib/format";
@@ -18,7 +19,7 @@ export default function ContractsPage() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Error | string | null>(null);
 
   function refresh() {
     return api.get<Contract[]>("/contracts").then(setContracts);
@@ -26,7 +27,7 @@ export default function ContractsPage() {
 
   useEffect(() => {
     Promise.all([refresh(), api.get<Tenant[]>("/tenants").then(setTenants)])
-      .catch(() => setError("Impossible de charger les contrats."))
+      .catch((err) => setError(err instanceof Error ? err : "Impossible de charger les contrats."))
       .finally(() => setLoading(false));
   }, []);
 
@@ -42,7 +43,7 @@ export default function ContractsPage() {
         </button>
       </div>
 
-      {error && <p className="mb-4 text-sm text-red-700">{error}</p>}
+      <ErrorAlert error={error} />
 
       {showForm && (
         <ContractForm
@@ -161,7 +162,7 @@ function ContractForm({ tenants, onCreated }: { tenants: Tenant[]; onCreated: ()
   const [rentAmount, setRentAmount] = useState("");
   const [deposit, setDeposit] = useState("");
   const [conditions, setConditions] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Error | string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -184,7 +185,7 @@ function ContractForm({ tenants, onCreated }: { tenants: Tenant[]; onCreated: ()
       });
       onCreated();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Impossible de créer ce contrat.");
+      setError(err instanceof Error ? err : "Impossible de créer ce contrat.");
     } finally {
       setSubmitting(false);
     }
@@ -192,7 +193,7 @@ function ContractForm({ tenants, onCreated }: { tenants: Tenant[]; onCreated: ()
 
   return (
     <form onSubmit={handleSubmit} className="mb-8 border border-petrole-200 bg-white p-5">
-      {error && <p className="mb-4 border-l-2 border-or-400 bg-or-50 px-3 py-2 text-sm">{error}</p>}
+      <ErrorAlert error={error} />
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="md:col-span-2">
           <label className="mb-1 block text-xs uppercase tracking-wide text-petrole-500">Locataire</label>

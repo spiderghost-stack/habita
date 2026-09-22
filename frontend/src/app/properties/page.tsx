@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/AppShell";
+import { ErrorAlert } from "@/components/ErrorAlert";
 import { useAuth } from "@/lib/auth";
 import { api, ApiError } from "@/lib/api";
 import { Property } from "@/lib/types";
@@ -85,7 +86,7 @@ function PropertyForm({ onCreated }: { onCreated: () => void }) {
   const [address, setAddress] = useState("");
   const [description, setDescription] = useState("");
   const [potentialIncome, setPotentialIncome] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Error | string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
@@ -101,7 +102,7 @@ function PropertyForm({ onCreated }: { onCreated: () => void }) {
       });
       onCreated();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Impossible d'ajouter la propriété.");
+      setError(err instanceof Error ? err : "Impossible d'ajouter la propriété.");
     } finally {
       setSubmitting(false);
     }
@@ -109,7 +110,7 @@ function PropertyForm({ onCreated }: { onCreated: () => void }) {
 
   return (
     <form onSubmit={handleSubmit} className="mb-8 border border-petrole-200 bg-white p-5">
-      {error && <p className="mb-4 border-l-2 border-or-400 bg-or-50 px-3 py-2 text-sm">{error}</p>}
+      <ErrorAlert error={error} />
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <Field label="Nom" value={name} onChange={setName} required placeholder="Villa Agontikon" />
         <Field label="Adresse" value={address} onChange={setAddress} required placeholder="Cotonou" />

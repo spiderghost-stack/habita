@@ -35,15 +35,27 @@ const PLAN_LABEL: Record<string, string> = { FREE: "Gratuit", STARTER: "Starter"
 const PLAN_UNITS: Record<string, string> = { FREE: "1 propriété, 2 unités", STARTER: "jusqu'à 10 unités", PRO: "jusqu'à 50 unités, contrats, dépenses, rapports, score de gestion", BUSINESS: "illimité, gestion multi-propriétaires" };
 
 function PlanSection({ plan }: { plan: string }) {
+  const isBusiness = plan === "BUSINESS";
   return (
-    <div className="border border-petrole-200 bg-white p-4 sm:p-6">
+    <div className="border border-petrole-200 bg-white p-4 sm:p-6 flex flex-col">
       <h2 className="mb-4 font-display text-lg font-bold text-petrole-800">Mon plan</h2>
-      <p className="mb-1 font-display text-xl font-bold text-petrole-800 sm:text-2xl">{PLAN_LABEL[plan] ?? plan}</p>
-      <p className="mb-4 text-sm text-petrole-500">{PLAN_UNITS[plan]}</p>
-      <p className="text-xs text-petrole-400">
-        Aucun prestataire de paiement récurrent n'est encore branché — le changement de plan se fait pour
-        l'instant manuellement par un administrateur. Contactez le support pour changer de plan.
-      </p>
+      <div className="flex-1">
+        <p className="mb-1 font-display text-xl font-bold text-petrole-800 sm:text-2xl">{PLAN_LABEL[plan] ?? plan}</p>
+        <p className="mb-6 text-sm text-petrole-500">{PLAN_UNITS[plan]}</p>
+      </div>
+      {!isBusiness && (
+        <div className="mt-auto border-t border-petrole-100 pt-4">
+          <p className="text-sm text-petrole-600 mb-3">
+            Débloquez plus de fonctionnalités en passant au niveau supérieur.
+          </p>
+          <a
+            href="/pricing"
+            className="inline-block bg-or-500 text-white px-4 py-2 text-sm font-semibold hover:bg-or-600 transition-colors"
+          >
+            Mettre à niveau mon plan
+          </a>
+        </div>
+      )}
     </div>
   );
 }

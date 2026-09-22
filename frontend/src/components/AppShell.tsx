@@ -109,12 +109,15 @@ export function AppShell({ children }: { children: ReactNode }) {
           {user.name}
         </Link>
         <p className="mb-3 truncate text-xs text-petrole-300">{user.email}</p>
-        <div className="flex gap-3">
-          <Link href="/profile" className="text-xs font-medium text-petrole-200 underline">
+        <div className="flex flex-wrap gap-3 mt-1">
+          <Link href="/profile" className="text-xs font-medium text-petrole-200 underline hover:text-white">
             Mon profil
           </Link>
-          <button onClick={() => setConfirmLogout(true)} className="text-xs font-medium text-or-300 underline">
-            Se déconnecter
+          <Link href="/pricing" className="text-xs font-medium text-or-400 underline hover:text-or-300">
+            Voir les tarifs
+          </Link>
+          <button onClick={() => setConfirmLogout(true)} className="text-xs font-medium text-red-400 underline hover:text-red-300">
+            Déconnexion
           </button>
         </div>
       </div>

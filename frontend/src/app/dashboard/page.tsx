@@ -11,17 +11,29 @@ import { MessageCircle } from "lucide-react";
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
 
   useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get("payment") === "success") {
+      setPaymentSuccess(true);
+      window.history.replaceState(null, "", "/dashboard");
+    }
+
     api
       .get<DashboardSummary>("/dashboard/summary")
       .then(setData)
       .catch(() => setError("Impossible de charger le tableau de bord."));
   }, []);
 
-
   return (
     <AppShell>
+      {paymentSuccess && (
+        <div className="mb-6 border-l-4 border-green-500 bg-green-50 px-4 py-3 text-sm text-green-800">
+          <strong>Paiement réussi !</strong> Votre plan a été mis à jour avec succès.
+        </div>
+      )}
+      
       <div className="mb-6 flex flex-wrap items-baseline justify-between gap-2">
         <h1 className="font-display text-xl font-bold text-petrole-800 sm:text-2xl">Tableau de bord</h1>
         {data && <span className="text-sm font-medium text-petrole-500">{monthLabel(data.period)}</span>}

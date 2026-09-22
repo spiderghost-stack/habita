@@ -91,6 +91,13 @@ export default function RegisterPage() {
             Se connecter
           </Link>
         </p>
+
+        <p className="mt-6 text-center text-xs text-petrole-500">
+          En vous inscrivant, vous acceptez nos conditions d'utilisation.{" "}
+          <Link href="/pricing" className="underline hover:text-petrole-800">
+            Voir nos tarifs
+          </Link>
+        </p>
       </div>
     </main>
   );

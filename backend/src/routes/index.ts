@@ -15,6 +15,7 @@ import uploadsRoutes from "../modules/uploads/uploads.routes";
 import adminRoutes from "../modules/admin/admin.routes";
 import messagingRoutes from "../modules/messaging/messaging.routes";
 import dashboardRoutes from "../modules/dashboard/dashboard.routes";
+import { billingRoutes } from "../modules/billing/billing.routes";
 
 const router = Router();
 
@@ -34,5 +35,6 @@ router.use("/uploads", uploadsRoutes);
 router.use("/admin", adminRoutes);
 router.use("/messaging", messagingRoutes);
 router.use("/dashboard", dashboardRoutes);
+router.use("/billing", billingRoutes);
 
 export default router;
