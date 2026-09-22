@@ -140,7 +140,10 @@ export default function PricingPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {PLANS.map((plan) => (
+          {PLANS.map((plan) => {
+            const isCurrentPlan = user?.plan === plan.id;
+            
+            return (
             <div
               key={plan.id}
               className={`bg-white border ${
@@ -181,12 +184,19 @@ export default function PricingPage() {
                 ))}
               </ul>
               
-              {plan.id === "FREE" ? (
+              {isCurrentPlan ? (
+                <button
+                  disabled
+                  className="w-full block text-center bg-petrole-50 text-petrole-700 border border-petrole-200 py-2.5 font-semibold opacity-60 cursor-not-allowed"
+                >
+                  Plan actuel
+                </button>
+              ) : plan.id === "FREE" ? (
                 <Link
                   href={user ? "/dashboard" : "/register"}
                   className="w-full block text-center bg-petrole-50 text-petrole-700 border border-petrole-200 py-2.5 font-semibold hover:bg-petrole-100 transition-colors"
                 >
-                  {user ? "Plan actuel" : "Commencer gratuitement"}
+                  {user ? "Aller au tableau de bord" : "Commencer gratuitement"}
                 </Link>
               ) : (
                 <button
@@ -209,7 +219,8 @@ export default function PricingPage() {
                 </button>
               )}
             </div>
-          ))}
+          )
+        })}
         </div>
       </main>
     </div>
