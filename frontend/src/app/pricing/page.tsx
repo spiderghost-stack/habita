@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Check, X, MessageCircle, CreditCard } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/lib/auth";
+import { api } from "@/lib/api";
 
 const WHATSAPP_NUMBER = "2290153079576";
 
@@ -90,21 +91,11 @@ export default function PricingPage() {
     setSubscribing(planId);
     setError(null);
     try {
-      const { url } = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1"}/billing/subscribe`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${window.localStorage.getItem("habita_token")}`,
-        },
-        body: JSON.stringify({ plan: planId }),
-      }).then(async (res) => {
-        if (!res.ok) throw new Error(await res.text());
-        return res.json();
-      });
+      const { url } = await api.post<{ url: string }>("/billing/subscribe", { plan: planId });
       window.location.href = url;
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setError("Erreur lors de l'initialisation du paiement.");
+      setError(err.message || "Erreur lors de l'initialisation du paiement.");
       setSubscribing(null);
     }
   };
